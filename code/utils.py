@@ -3,15 +3,12 @@ Created on Aug 2, 2017
 
 @author: alon
 '''
-def printHello():
-    print("Hello")
-
 
 def removeApostrophe(str):
     return str.replace("'", "")
 
 
-def fileToDic(fileName, separator=" "):
+def fileToDic(fileName):
     """
     take input file where each line is <key><separtor><value>
     and return a dictionary
@@ -34,8 +31,8 @@ def fileToDic(fileName, separator=" "):
                 dic[lid] = [question, [], []]
             #Add the logical form to the consistent or incosistent unique list
             if isConsistent:
-                dic[lid][1] = list(set(dic[lid][1] + [logicalForm]))
+                dic[lid][1] = list(set(dic[lid][1] + [canonical]))
             else:
-                dic[lid][2] = list(set(dic[lid][2] + [logicalForm]))
+                dic[lid][2] = list(set(dic[lid][2] + [canonical]))
     return dic
     

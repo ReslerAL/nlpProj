@@ -8,6 +8,7 @@ import random
 from utils import *
 
 class Rnn_model:
+    
     def __init__(self, fileName):
         dic = fileToDic(fileName)
         self.dic = dic
@@ -21,5 +22,10 @@ class Rnn_model:
 
         batch_keys = random.sample(self.keys, batchSize)
         batch = [(self.dic[key][0], sample_consistent(key), sample_inconsistent(key)) for key in batch_keys]
-
         return batch
+    
+    def apply(self, sent):
+        '''
+        calculate the model output for the given sent
+        '''
+        return 0

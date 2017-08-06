@@ -35,4 +35,20 @@ def fileToDic(fileName):
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
     return dic
+
+def correct_distribution_mass(self, pred_dist, labels):
+    '''
+    pred_dist - vector that represent prediction distribution
+    labals - zero one vector for correct/incorrect
+    return l1_norm(<pred_dist, labels>)
+    '''
+    return 0
+
+def cosine_similarity(v1, v2):
+    return 0
+
+def softmax(vec):
+    return 0
+
+def basic_normalized(vec):
     

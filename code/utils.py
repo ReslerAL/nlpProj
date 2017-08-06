@@ -7,17 +7,35 @@ def printHello():
     print("Hello")
 
 
+def removeApostrophe(str):
+    return str.replace("'", "")
+
 
 def fileToDic(fileName, separator=" "):
     """
     take input file where each line is <key><separtor><value>
     and return a dictionary
     """
-    dic = {'a' : 3}
-#     with open(fileName) as f:
-#         for line in f:
-#             print (line)
-#             key, value = line.split()
-#             dic[key] = value    
+    dic = {}
+    with open(fileName) as f:
+        for line in f:
+            #Parse line
+            line = removeApostrophe(line)
+            line = line.split('\t')
+            assert len(line) == 5
+            lid, question, canonical, logicalForm, isConsistent = line
+            lid = int(lid)
+            #Convert isConsistent to boolean
+            assert isConsistent in ("True\n", "False\n"), "isConsistent: <" + str(isConsistent) + ">"
+            isConsistent = isConsistent == "True\n"
+
+            #Add line to dictionary
+            if lid not in dic:
+                dic[lid] = [question, [], []]
+            #Add the logical form to the consistent or incosistent unique list
+            if isConsistent:
+                dic[lid][1] = list(set(dic[lid][1] + [logicalForm]))
+            else:
+                dic[lid][2] = list(set(dic[lid][2] + [logicalForm]))
     return dic
     

@@ -20,6 +20,6 @@ class Rnn_model:
             return random.sample(self.dic[key][2], 1)[0]
 
         batch_keys = random.sample(self.keys, batchSize)
-        batch = [(key, sample_consistent(key), sample_inconsistent(key)) for key in batch_keys]
+        batch = [(self.dic[key][0], sample_consistent(key), sample_inconsistent(key)) for key in batch_keys]
 
         return batch

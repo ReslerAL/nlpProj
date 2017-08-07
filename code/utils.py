@@ -4,6 +4,11 @@ Created on Aug 2, 2017
 @author: alon
 '''
 
+import numpy as np
+import sklearn
+from sklearn.metrics.pairwise import cosine_similarity
+
+
 def removeApostrophe(str):
     return str.replace("'", "")
 
@@ -38,17 +43,19 @@ def fileToDic(fileName):
 
 def correct_distribution_mass(self, pred_dist, labels):
     '''
-    pred_dist - vector that represent prediction distribution
+    pred_dist - vector that represent prediction distribution (normalized)
     labals - zero one vector for correct/incorrect
     return l1_norm(<pred_dist, labels>)
     '''
-    return 0
+    return np.inner(pred_dist, labels)
 
-def cosine_similarity(v1, v2):
-    return 0
+def basic_normalize(vec):
+    vec = vec + 1
+    vec = vec / numpy.linalg.norm(vec)
+    return vec
 
-def softmax(vec):
-    return 0
+def softmax_normalize(vec):
+    e_vec = np.exp(vec - np.max(vec))
+    return e_vec / e_vec.sum()
 
-def basic_normalized(vec):
-    
+

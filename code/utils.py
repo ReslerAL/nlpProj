@@ -7,6 +7,7 @@ Created on Aug 2, 2017
 import numpy as np
 import sklearn
 from sklearn.metrics.pairwise import cosine_similarity
+from fileinput import filename
 
 
 def removeApostrophe(str):
@@ -16,7 +17,7 @@ def removeApostrophe(str):
 def fileToDic(fileName):
     """
     take input file where each line is <key><separtor><value>
-    and return a dictionary
+    and return a dictionary of <question_id :[question, [consistent canonical forms],[inconsistent canonical forms] ]> 
     """
     dic = {}
     with open(fileName) as f:
@@ -40,6 +41,19 @@ def fileToDic(fileName):
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
     return dic
+
+def fileToVocabulary(dataDic):
+    """
+    take the dataDic return by last function and create dictionary that map word to index. 
+    The words need to be taken from the quistions and canonical forms
+    """
+    return 0
+
+def toOneHot(wordsIdxs, word):
+    """
+    return np array that represent one hot vector of size len(wordsIdxs.keys()) where the entry that have one is wordsIdxs[word]
+    """
+    return 0
 
 def correct_distribution_mass(self, pred_dist, labels):
     '''

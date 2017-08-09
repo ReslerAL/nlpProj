@@ -7,28 +7,30 @@ Created on Aug 6, 2017
 from __future__ import print_function, division
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import random
 from utils import *
 
-num_epochs = 100
-total_series_length = 50000
-truncated_backprop_length = 15
-state_size = 4
-num_classes = 2
-echo_step = 3
-batch_size = 5
-num_batches = total_series_length//batch_size//truncated_backprop_length
 
+batch_size = 5
 embedding_dim = 300
 
 
 class Rnn_model:
     
-    def __init__(self, fileName):
-        dic = fileToDic(fileName)
-        self.dic = dic
-        self.keys = self.dic.keys()
+    #the init is just for getting the data 
+    def __init__(self, data):
+        self.data = data
+        self.keys = self.data.keys() #this is the questions ids
+        self.embedding_indxs = fileToVocabulary(self.data)
+        self.vocab_size = len(self.embedding_indxs)
+        
+    
+    def build_model(self):
+        
+        #the main lstm cell. The second true argument sets peephole like the model used by Weiting
+        lstm_cell = tf.contrib.rnn.LSTMCell(embedding_dim, True)
+        
+        
         
     def generateBatch(self, batchSize):
         def sample_consistent(key):

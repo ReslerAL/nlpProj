@@ -5,8 +5,6 @@ Created on Aug 2, 2017
 '''
 
 import numpy as np
-import sklearn
-from sklearn.metrics.pairwise import cosine_similarity
 from fileinput import filename
 
 
@@ -47,7 +45,7 @@ def fileToVocabulary(dataDic):
     take the dataDic return by last function and create dictionary that map word to index. 
     The words need to be taken from the quistions and canonical forms
     """
-    return 0
+    return {}
 
 def toOneHot(wordsIdxs, word):
     """

@@ -4,16 +4,21 @@ Created on Aug 6, 2017
 @author: alon
 '''
 
+import sklearn
+from sklearn.metrics.pairwise import cosine_similarity
+from utils import *
+
+
 class Evaluator:
     
     def __init__(self, model, fileName):
         self.model = model
-        self.dic = parseFile(fileName)
+        self.dic = self.parseFile(fileName)
         self.basic_normalized_eval_list = []
         self.softmax_eval_list = []
         self.elimination_eval_list = []
         for lid in self.dic.keys():
-            question_embedding = model.apply(self.dic[lid][0]
+            question_embedding = model.apply(self.dic[lid][0])
             correct_canonical_embeddings = [model.apply(canonical) for canonical in self.dic[lid][1]]
             incorrect_canonical_embeddings = [model.apply(canonical) for canonical in self.dic[lid][2]]
             correct_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in correct_canonical_embeddings]

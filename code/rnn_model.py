@@ -3,7 +3,7 @@ Created on Aug 6, 2017
 
 @author: alon
 '''
-
+ 
 from __future__ import print_function, division
 import numpy as np
 import tensorflow as tf
@@ -24,35 +24,70 @@ class Rnn_model:
         self.vocab_size = len(self.vocab)
         self.batch_size = config['batch_size']
         self.embedding_dim = config['embedding_dim']
+        self.delta = float(config['delta'])
+        
+        self.delta_vec = self.delta * tf.ones(self.batch_size, dtype=float32)
+        
+        self.zero_batch = tf.zeros(self.batch_size, tf.float32)
         
         #the embedding part. We will learn it as part of the model
-        self.embeddings = tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_dim], -1.0, 1.0))
+        self.w = tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_dim], -1.0, 1.0))
         
-        #the main lstm cell. The second true argument sets peephole like the model used by Weiting
+        self.extended_w = tf.concat((self.w, tf.zeros((1, self.embedding_dim))), axis=0)
+        
+        #the main lstm cell. The second true argument sets peephole like the model used by Weiting at el.
         self.lstm_cell = tf.contrib.rnn.LSTMCell(self.embedding_dim, True)
         
         #init C_0 - the state of the lstm_cell at the beginning
         self._initial_state = self.lstm_cell.zero_state(self.batch_size, dtype=tf.float32)
         
-    
-    def build_model(self):
-        
         #input placeholder - each input is a list of embedding indices represent the sentence 
-        x = tf.placeholder(tf.int32, [None])
-        z_con = tf.placeholder(tf.int32, [None])
-        z_incon = tf.placeholder(tf.int32, [None])
+        self.x = tf.placeholder(tf.int32, [self.batch_size, None])
+        self.z_con = tf.placeholder(tf.int32, [self.batch_size, None])
+        self.z_incon = tf.placeholder(tf.int32, [self.batch_size, None])
         
         #transfer the input to lost embedding vectors we can feed the net with
-        x_embeds = tf.nn.embedding_lookup(self.embeddings, x)
-        z_con_embeds = tf.nn.embedding_lookup(self.embeddings, z_con)
-        z_incon_embeds = tf.nn.embedding_lookup(self.embeddings, z_incon)
+        x_embeds = tf.nn.embedding_lookup(self.extended_w, self.x)
+        z_con_embeds = tf.nn.embedding_lookup(self.extended_w, self.z_con)
+        z_incon_embeds = tf.nn.embedding_lookup(self.extended_w, self.z_incon)
         
-              
+        #now we need placeholder for the sequence sizes - this is because the data is padded with dummy value
+        #and we want the output to be correct (takes on the real end of the sequence, not containing the dummy value)
+        self.x_seq_len = tf.placeholder(dtype=tf.int32, shape=(self.batch_size))
+        self.z_con_seq_len = tf.placeholder(dtype=tf.int32, shape=(self.batch_size))
+        self.z_incon_seq_len = tf.placeholder(dtype=tf.int32, shape=(self.batch_size))
+               
+        #now run the lstm to get the outputs. Note that output shape is batch_size * sequence_len * embedding_dim
+        #sequence len is the max len of a sentence in the batch
+        #last_state is a tuple with the following values:
+        # last_state.h - this is the last output according to the sequence length parameter (this is h_t)
+        # last_state.c - this is the last cell state according to the sequence length parameter (this is c_t)
+        
+        _, self.x_last_state = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, 
+                                                 sequence_length=self.x_seq_len, inputs=x_embeds)
+        
+        _, self.z_con_last_state = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, 
+                                                sequence_length=self.z_con_seq_len, inputs=z_con_embeds)
+          
+        _, self.z_incon_last_state = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, 
+                                                 sequence_length=self.z_incon_seq_len, inputs=z_incon_embeds)
+                
+        #compute the loss from the correct outputs of the batches
+        self.x_z_con_sim = self.cosineSim(self.x_last_state.h, self.z_con_last_state.h)
+        self.x_z_incon_sim = self.cosineSim(self.x_last_state.h, self.z_incon_last_state.h)
+                
+        self.loss_vec = tf.maximum(self.zero_batch, self.delta - self.x_z_con_sim + self.x_z_incon_sim)
+        self.loss =  tf.reduce_sum(self.loss_vec)
         
         
-        loss = 0
-        return loss   
-        
+    """
+    x and y are batch (array) of vectors (actually tensors). return batch (array) of the cossine similarite
+    between x and y (actually a tensor) 
+    """
+    def cosineSim(self, x, y):
+        x_nl = tf.nn.l2_normalize(x, 1)
+        y_nl = tf.nn.l2_normalize(y, 1)
+        return tf.reduce_sum(tf.multiply(x_nl, y_nl), axis=1)
     
     """
     convert the data to the same structure just instead of words in each place
@@ -69,7 +104,10 @@ class Rnn_model:
                 dic[qstn_id][2].append(toEmbeddingList(con_form.split(), self.vocab))
         return dic
         
-          
+    """
+    return 3 batches. One with the questions and the other two with the consistent and inconsistent forms
+    return also the sequence lengths before padding for each batch
+    """     
     def generateBatch(self):
         def sample_consistent(key):
             return random.sample(self.data[key][1], 1)[0]
@@ -77,8 +115,36 @@ class Rnn_model:
             return random.sample(self.data[key][2], 1)[0]
 
         batch_keys = random.sample(self.keys, self.batch_size)
-        batch = [(self.data[key][0], sample_consistent(key), sample_inconsistent(key)) for key in batch_keys]
-        return batch
+        #batch = [(self.data[key][0], sample_consistent(key), sample_inconsistent(key)) for key in batch_keys]
+        batch_x = [self.data[key][0] for key in batch_keys]
+        batch_z_con = [sample_consistent(key) for key in batch_keys]
+        batch_z_incon = [sample_inconsistent(key) for key in batch_keys]
+        return [(self.padBatch(batch_x), self.getSequenceLength(batch_x)),
+                (self.padBatch(batch_z_con), self.getSequenceLength(batch_z_con)),
+                (self.padBatch(batch_z_incon), self.getSequenceLength(batch_z_incon))]
+    
+    
+    """
+    pad all the sequence in the batch according to the max sequence length.
+    pad it with self.vocab_size so the value is the index of the constant dummy embedding
+    """
+    def padBatch(self, batch):
+        result = [0]*len(batch)
+        max_len = getMaxLength(batch)
+        for i, sample in enumerate(batch):
+            result[i] = np.pad(sample, (0,max_len-len(sample)), 'constant', constant_values=self.vocab_size)
+        return result
+    
+    def getSequenceLength(self, batch):
+        result = [-1]*len(batch)
+        for k, sample in enumerate(batch):
+            for i, val in enumerate(sample):
+                if val == self.vocab_size: #this is the padding value
+                    result[k] = i
+                    break
+            if result[k] == -1:
+                result[k] = len(sample)
+        return result
     
     def apply(self, sent):
         '''
@@ -88,15 +154,19 @@ class Rnn_model:
     
 if __name__ == '__main__':
     embeddings = tf.Variable(tf.random_uniform([5, 2], -1.0, 1.0))
-    x = tf.placeholder(tf.int32, [None])
-    z = tf.nn.embedding_lookup(embeddings, x)
+#     x = tf.placeholder(tf.int32, [None, None])
+#     z = tf.nn.embedding_lookup(embeddings, x)
+    
+    x = tf.placeholder(tf.float32, [None])
+    x_nl = tf.nn.l2_normalize(x, dim=0)
     
     init = tf.global_variables_initializer()
     
     with tf.Session() as sess:
         sess.run(init)
-        res, embds = sess.run([z, embeddings], feed_dict={x : [1,3]})
-        print(embds)
+#         res, embds = sess.run([z, embeddings], feed_dict={x : [[2],[3]]})
+        res= sess.run(x_nl, feed_dict={x : [1,1,1]})
+#         print(embds)
         print(res)
     
     

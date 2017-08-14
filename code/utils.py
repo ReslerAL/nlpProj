@@ -10,6 +10,7 @@ import random
 import re
 from numpy import average
 from builtins import str
+import math
 #from aifc import data
 
 
@@ -26,7 +27,7 @@ def fileToDic(fileName):
     dic = {}
     max_sent_size = 0
     max_sent = ''
-    ttl_len = 0
+#     ttl_len = 0
     count = 0
     with open(fileName) as f:
         for line in f:
@@ -35,15 +36,15 @@ def fileToDic(fileName):
             line = line.split('\t')
             assert len(line) == 5
             lid, question, canonical, logicalForm, isConsistent = line
-            ttl_len += len(question.split())
-            ttl_len += len(canonical.split())
-            count += 2
-            if len(question.split()) > max_sent_size:
-                max_sent_size = len(question.split())
-                max_sent = question
-            if len(canonical.split()) > max_sent_size:
-                max_sent_size =len(canonical.split())
-                max_sent = canonical
+#             ttl_len += len(question.split())
+#             ttl_len += len(canonical.split())
+            count += 1
+#             if len(question.split()) > max_sent_size:
+#                 max_sent_size = len(question.split())
+#                 max_sent = question
+#             if len(canonical.split()) > max_sent_size:
+#                 max_sent_size =len(canonical.split())
+#                 max_sent = canonical
             lid = int(lid)
             #Convert isConsistent to boolean
             assert isConsistent in ("True\n", "False\n"), "isConsistent: <" + str(isConsistent) + ">"
@@ -57,10 +58,10 @@ def fileToDic(fileName):
                 dic[lid][1] = list(set(dic[lid][1] + [canonical]))
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
-    print("max lenght is " + str(max_sent_size))
-    print("max sent is \n" + max_sent)
-    print("average len is " + str(ttl_len/count))
-    print("count is " + str(count))
+#     print("max lenght is " + str(max_sent_size))
+#     print("max sent is \n" + max_sent)
+#     print("average len is " + str(ttl_len/count))
+#     print("count is " + str(count))
     return dic
 
 def rawDataToVocabulary(dataDic):
@@ -115,20 +116,40 @@ def toEmbeddingList(word_list, embeddingsToIndx):
             n += 1
         res.append(embeddingsToIndx[word])
     return res
-    
+
+"""
+array - array of arrays 
+return the maximun length of array in arrays
+"""
+def getMaxLength(arrays):
+    max = 0
+    for array in arrays:
+        if len(array) > max:
+            max = len(array)
+    return max
+
+def formatTimer(timer):
+    sec = math.floor(timer)
+    hours = round(sec // 3600)
+    sec = sec - 3600*hours
+    minutes = round(sec // 60)
+    sec = sec - 60*minutes
+    return hours, minutes, sec
  
 if __name__ == '__main__':
-    print("in utils main")  
-    raw_data = fileToDic('../project_train_data.csv')
-    print(len(raw_data))
-    print(raw_data[32])
-    vocab = rawDataToVocabulary(raw_data)
-    print(len(vocab))
-    print(vocab['chart'], vocab['name'], vocab['dog'])
+    print("in utils main") 
+    timer = 5605.0228905677795
+    print(formatTimer(timer))
       
     
     
     
+#     raw_data = fileToDic('../project_train_data.csv')
+#     print(len(raw_data))
+#     print(raw_data[32])
+#     vocab = rawDataToVocabulary(raw_data)
+#     print(len(vocab))
+#     print(vocab['chart'], vocab['name'], vocab['dog'])
 
     
     

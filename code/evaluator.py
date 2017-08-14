@@ -84,5 +84,12 @@ class Evaluator:
         guessed_right = np.sum(inversed_labels[eliminated])
         
         return float(guessed_right) / float(size)
-        
+
+if __name__ == '__main__':
+    for i in range (2):
+        for j in range(i):
+            if j == 3:
+                print("j is", j)
+                break
+        print()
         

@@ -86,15 +86,13 @@ class Rnn_model:
         
         self.saver = tf.train.Saver()
         
-    def evaluateMode(self):
-        return 0
         
     """
     saving the model and the configuration
     each model will be save in separate directory named with time in milliseconds
     """
     def saveModel(self, session):
-        dirr = './saved/' + str(int(round(time.time() * 1000))) + '/'
+        dirr = '../saved/' + str(int(round(time.time() * 1000))) + '/'
         full_name = dirr + 'lstm-model'
         os.makedirs(dirr,  exist_ok=True)
         self.saver.save(session, full_name)
@@ -168,11 +166,12 @@ class Rnn_model:
                 result[k] = len(sample)
         return result
     
-    def apply(self, inputs, sess):
+    def apply(self, seq, sess):
         '''
-        return tensor for the output of the net
+        running the model on the sequence and returning the lstm output
         '''
-        return sess.run(self.x_last_state.h, feed_dict = {self.x : inputs})
+        len = [len(input)]
+        return sess.run(self.x_last_state.h, feed_dict = {self.x : seq, self.x_seq_len : len})
     
 if __name__ == '__main__':
     embeddings = tf.Variable(tf.random_uniform([5, 2], -1.0, 1.0))

@@ -11,8 +11,8 @@ import re
 from numpy import average
 from builtins import str
 import math
-#from aifc import data
-
+import pickle
+from rnn_model import *
 
 
 def removeApostrophe(str):
@@ -62,7 +62,18 @@ def fileToDic(fileName):
 #     print("max sent is \n" + max_sent)
 #     print("average len is " + str(ttl_len/count))
 #     print("count is " + str(count))
+    return cleanDate(dic)
+
+"""for some reason there are sentences without inconsistent forms - remove them"""
+def cleanDate(dic):
+    rem = []
+    for lid in dic:
+        if len(dic[lid][1]) == 0 or len(dic[lid][2]) == 0:
+            rem += [lid]
+    for lid in rem:
+        del dic[lid]
     return dic
+    
 
 def rawDataToVocabulary(dataDic):
     """
@@ -70,6 +81,15 @@ def rawDataToVocabulary(dataDic):
     The words need to be taken from the questions and canonical forms
     """
     vocab = {}
+    for value in dataDic.values():
+        addToVocab(value[0].split(), vocab)
+        for sent in value[1]:
+            addToVocab(sent.split(), vocab)
+        for sent in value[2]:
+            addToVocab(sent.split(), vocab)        
+    return vocab
+
+def extendVocab(vocab, dataDic):
     for value in dataDic.values():
         addToVocab(value[0].split(), vocab)
         for sent in value[1]:
@@ -102,7 +122,22 @@ def softmax_normalize(vec):
     e_vec = np.exp(vec - np.max(vec))
     return e_vec / e_vec.sum()
 
-
+"""
+convert the data to the same structure just instead of words in each place
+we will hold the indices of the word embeddings
+"""   
+def processData(raw_data, vocab):
+    dic = {}
+    for qstn_id in raw_data:
+        if qstn_id not in dic:
+            dic[qstn_id] = [toEmbeddingList(raw_data[qstn_id][0].split(), vocab), [], []]
+        for con_form in raw_data[qstn_id][1]:
+            dic[qstn_id][1].append(toEmbeddingList(con_form.split(), vocab))
+        for con_form in raw_data[qstn_id][2]:
+            dic[qstn_id][2].append(toEmbeddingList(con_form.split(), vocab))
+    return dic
+    
+    
 """
 convert list of words to list of the word indices according to the embeddingsToIndx dictionary
 if a new word is found it will be added to the embeddingsToIndx dic
@@ -135,6 +170,18 @@ def formatTimer(timer):
     minutes = round(sec // 60)
     sec = sec - 60*minutes
     return hours, minutes, sec
+
+"""
+model directory is a subdirectory in 'saved' name after the saving time
+"""
+def getModelFromFile(model_dir, sess):
+    confFile = model_dir + 'configuration.p'
+    config = pickle.load(open(confFile, 'rb'))
+    raw_data = fileToDic(config['data_file'])
+    model = Rnn_model(raw_data, config)
+    model.load(model_dir, sess)
+    return model
+
  
 if __name__ == '__main__':
     print("in utils main") 
@@ -142,7 +189,7 @@ if __name__ == '__main__':
     print(formatTimer(timer))
       
     
-    
+  
     
 #     raw_data = fileToDic('../project_train_data.csv')
 #     print(len(raw_data))

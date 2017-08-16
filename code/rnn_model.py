@@ -11,16 +11,21 @@ import random
 from utils import *
 from numpy import float32
 from tensorflow.contrib.batching.ops.gen_batch_ops import batch
+import time
+import  math
+import os
+import pickle
 
 class Rnn_model:
     
     #raw_data is data structure contain the data as a natural language
     #self.data will contain the data as embedding vectors
     def __init__(self, raw_data, config):
+        self.conf = config
         self.raw_data = raw_data
         self.keys = self.raw_data.keys() #this is the questions ids
         self.vocab = rawDataToVocabulary(raw_data)
-        self.data = self.processDate(raw_data)
+        self.data = processData(raw_data, self.vocab)
         self.vocab_size = len(self.vocab)
         self.batch_size = config['batch_size']
         self.embedding_dim = config['embedding_dim']
@@ -41,7 +46,7 @@ class Rnn_model:
         #init C_0 - the state of the lstm_cell at the beginning
         self._initial_state = self.lstm_cell.zero_state(self.batch_size, dtype=tf.float32)
         
-        #input placeholder - each input is a list of embedding indices represent the sentence 
+        #train input placeholder - each input is a list of embedding indices represent the sentence 
         self.x = tf.placeholder(tf.int32, [self.batch_size, None])
         self.z_con = tf.placeholder(tf.int32, [self.batch_size, None])
         self.z_incon = tf.placeholder(tf.int32, [self.batch_size, None])
@@ -79,7 +84,38 @@ class Rnn_model:
         self.loss_vec = tf.maximum(self.zero_batch, self.delta - self.x_z_con_sim + self.x_z_incon_sim)
         self.loss =  tf.reduce_sum(self.loss_vec)
         
+        self.saver = tf.train.Saver()
         
+    def evaluateMode(self):
+        return 0
+        
+    """
+    saving the model and the configuration
+    each model will be save in separate directory named with time in milliseconds
+    """
+    def saveModel(self, session):
+        dirr = './saved/' + str(int(round(time.time() * 1000))) + '/'
+        full_name = dirr + 'lstm-model'
+        os.makedirs(dirr,  exist_ok=True)
+        self.saver.save(session, full_name)
+        #save the configuration
+        confFile = dirr + 'configuration.p'
+        pickle.dump(self.conf, open(confFile, 'wb'))        
+        #also save as text for us
+        f = open(dirr + 'configuration.txt', 'w')
+        f.write(str(self.conf))
+        f.close()
+        print('model saved to {} directory'.format(full_name))
+
+        
+    def load(self, model_dir, session):
+        loader = tf.train.import_meta_graph(model_dir + 'lstm-model' + '.meta')
+        loader.restore(session, tf.train.latest_checkpoint(model_dir))
+        f = open(model_dir + 'configuration.txt', 'r')
+        print('loading model with configuration:\n', f.read())
+        f.close()
+    
+    
     """
     x and y are batch (array) of vectors (actually tensors). return batch (array) of the cossine similarite
     between x and y (actually a tensor) 
@@ -89,20 +125,6 @@ class Rnn_model:
         y_nl = tf.nn.l2_normalize(y, 1)
         return tf.reduce_sum(tf.multiply(x_nl, y_nl), axis=1)
     
-    """
-    convert the data to the same structure just instead of words in each place
-    we will hold the indices of the word embeddings
-    """   
-    def processDate(self, raw_data):
-        dic = {}
-        for qstn_id in raw_data:
-            if qstn_id not in dic:
-                dic[qstn_id] = [toEmbeddingList(raw_data[qstn_id][0].split(), self.vocab), [], []]
-            for con_form in raw_data[qstn_id][1]:
-                dic[qstn_id][1].append(toEmbeddingList(con_form.split(), self.vocab))
-            for con_form in raw_data[qstn_id][2]:
-                dic[qstn_id][2].append(toEmbeddingList(con_form.split(), self.vocab))
-        return dic
         
     """
     return 3 batches. One with the questions and the other two with the consistent and inconsistent forms
@@ -146,11 +168,11 @@ class Rnn_model:
                 result[k] = len(sample)
         return result
     
-    def apply(self, sent):
+    def apply(self, inputs, sess):
         '''
-        calculate the model output for the given sent
+        return tensor for the output of the net
         '''
-        return 0
+        return sess.run(self.x_last_state.h, feed_dict = {self.x : inputs})
     
 if __name__ == '__main__':
     embeddings = tf.Variable(tf.random_uniform([5, 2], -1.0, 1.0))

@@ -8,19 +8,28 @@ import sklearn
 from sklearn.metrics.pairwise import cosine_similarity
 from utils import *
 
-
+"""
+TODO:
+see how to new constant embeddings for new words (words that exist only in the eval_vocab)
+implement the apply method in rnn_model
+"""
 class Evaluator:
     
     def __init__(self, model, fileName):
         self.model = model
-        self.dic = self.parseFile(fileName)
+        self.raw_data = self.parseFile(fileName)
+#         self.eval_vocab = extendVocab(model.vocab.copy(), self.dic)
+#         self.data = processData(self.raw_data, self.eval_vocab)
+        
+     
+    def eval(self, sess): 
         self.basic_normalized_eval_list = []
         self.softmax_eval_list = []
         self.elimination_eval_list = []
         for lid in self.dic.keys():
-            question_embedding = model.apply(self.dic[lid][0])
-            correct_canonical_embeddings = [model.apply(canonical) for canonical in self.dic[lid][1]]
-            incorrect_canonical_embeddings = [model.apply(canonical) for canonical in self.dic[lid][2]]
+            question_embedding = self.model.apply(self.dic[lid][0], sess)
+            correct_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[lid][1]]
+            incorrect_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[lid][2]]
             correct_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in correct_canonical_embeddings]
             incorrect_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in incorrect_canonical_embeddings]
             all_cosine_similarities = correct_cosine_similarities + incorrect_cosine_similarities
@@ -29,7 +38,8 @@ class Evaluator:
             self.softmax_eval_list.append(self.softmax_eval(all_cosine_similarities, labels))
             self.elimantation_eval_list.append(self.elimantation_eval(all_cosine_similarities, labels, 5))
         return (np.mean(self.basic_normalized_eval_list), np.mean(self.softmax_eval_list), np.mean(self.elimination_eval_list))
-        
+    
+    
     def parseFile(self, fileName):
         """
         take input file where each line is <key><separtor><value>
@@ -78,18 +88,11 @@ class Evaluator:
         eliminate the minimum size of the pred_dist and return #of correct eliminated / size - 
         this is the fraction of incorrect vectors that were eliminated  
         '''
-
         eliminated = np.argsort(similarityVector)[:size]
         inversed_labels = 1 - labels
         guessed_right = np.sum(inversed_labels[eliminated])
-        
         return float(guessed_right) / float(size)
 
 if __name__ == '__main__':
-    for i in range (2):
-        for j in range(i):
-            if j == 3:
-                print("j is", j)
-                break
-        print()
+    print("in evaluator main")
         

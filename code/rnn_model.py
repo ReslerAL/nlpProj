@@ -114,7 +114,7 @@ class Rnn_model:
         f = open(dirr + 'configuration.txt', 'w')
         f.write(str(self.conf))
         f.close()
-        print('model saved to {} directory'.format(full_name))
+        print('model saved to {} directory'.format(dirr))
 
         
     def load(self, model_dir, session):

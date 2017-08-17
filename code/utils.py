@@ -114,7 +114,7 @@ def correct_distribution_mass(pred_dist, labels):
     return np.inner(pred_dist, labels)
 
 def basic_normalize(vec):
-#     vec = vec + 1
+    vec = vec + 1
     vec = vec / np.linalg.norm(vec)
     return vec
 

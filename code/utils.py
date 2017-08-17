@@ -105,7 +105,7 @@ def addToVocab(words, vocab):
             vocab[word] = n
             n += 1
 
-def correct_distribution_mass(self, pred_dist, labels):
+def correct_distribution_mass(pred_dist, labels):
     '''
     pred_dist - vector that represent prediction distribution (normalized)
     labals - zero one vector for correct/incorrect
@@ -114,7 +114,7 @@ def correct_distribution_mass(self, pred_dist, labels):
     return np.inner(pred_dist, labels)
 
 def basic_normalize(vec):
-    vec = vec + 1
+#     vec = vec + 1
     vec = vec / np.linalg.norm(vec)
     return vec
 
@@ -185,8 +185,9 @@ def getModelFromFile(model_dir, sess):
  
 if __name__ == '__main__':
     print("in utils main") 
-    timer = 5605.0228905677795
-    print(formatTimer(timer))
+    vec = [1,2,3]
+    res = basic_normalize(vec)
+    print(res)
       
     
   

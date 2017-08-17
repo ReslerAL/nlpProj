@@ -16,6 +16,7 @@ import  math
 import os
 import pickle
 
+
 class Rnn_model:
     
     #raw_data is data structure contain the data as a natural language
@@ -85,6 +86,16 @@ class Rnn_model:
         self.loss =  tf.reduce_sum(self.loss_vec)
         
         self.saver = tf.train.Saver()
+    
+    def prepEval(self):
+        self.input = tf.placeholder(tf.int32, [None, None])
+        embeds = tf.nn.embedding_lookup(self.extended_w, self.input)
+        _, res = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, inputs=embeds)
+        self.eval = res.h
+    
+    def apply(self, input, sess):
+        res = sess.run(self.eval, feed_dict={self.input:[input]})
+        return res[0]
         
         
     """
@@ -166,12 +177,6 @@ class Rnn_model:
                 result[k] = len(sample)
         return result
     
-    def apply(self, seq, sess):
-        '''
-        running the model on the sequence and returning the lstm output
-        '''
-        len = [len(input)]
-        return sess.run(self.x_last_state.h, feed_dict = {self.x : seq, self.x_seq_len : len})
     
 if __name__ == '__main__':
     embeddings = tf.Variable(tf.random_uniform([5, 2], -1.0, 1.0))

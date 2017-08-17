@@ -18,6 +18,7 @@ class Evaluator:
     def __init__(self, model, fileName):
         self.model = model
         self.raw_data = self.parseFile(fileName)
+        self.dic = processData(self.raw_data, model.vocab)
 #         self.eval_vocab = extendVocab(model.vocab.copy(), self.dic)
 #         self.data = processData(self.raw_data, self.eval_vocab)
         
@@ -28,8 +29,8 @@ class Evaluator:
         self.elimination_eval_list = []
         for lid in self.dic.keys():
             question_embedding = self.model.apply(self.dic[lid][0], sess)
-            correct_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[lid][1]]
-            incorrect_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[lid][2]]
+            correct_canonical_embeddings = [self.model.apply(canonical, sess) for canonical in self.dic[lid][1]]
+            incorrect_canonical_embeddings = [self.model.apply(canonical, sess) for canonical in self.dic[lid][2]]
             correct_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in correct_canonical_embeddings]
             incorrect_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in incorrect_canonical_embeddings]
             all_cosine_similarities = correct_cosine_similarities + incorrect_cosine_similarities
@@ -52,7 +53,7 @@ class Evaluator:
                 line = removeApostrophe(line)
                 line = line.split('\t')
                 assert len(line) == 5
-                lid, question, canonical, isCorrect = line
+                lid, question, canonical, logical, isCorrect = line
                 lid = int(lid)
                 #Convert isCorrect to boolean
                 assert isCorrect in ("True\n", "False\n"), "isCorrect: <" + str(isCorrect) + ">"

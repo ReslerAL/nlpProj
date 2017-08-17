@@ -8,6 +8,7 @@ from __future__ import print_function, division
 import numpy as np
 import tensorflow as tf
 import random
+import utils
 from utils import *
 from numpy import float32
 from tensorflow.contrib.batching.ops.gen_batch_ops import batch
@@ -25,8 +26,8 @@ class Rnn_model:
         self.conf = config
         self.raw_data = raw_data
         self.keys = self.raw_data.keys() #this is the questions ids
-        self.vocab = rawDataToVocabulary(raw_data)
-        self.data = processData(raw_data, self.vocab)
+        self.vocab = utils.rawDataToVocabulary(raw_data)
+        self.data = utils.processData(raw_data, self.vocab)
         self.vocab_size = len(self.vocab)
         self.batch_size = config['batch_size']
         self.embedding_dim = config['embedding_dim']

@@ -5,7 +5,6 @@ Created on Aug 6, 2017
 '''
 
 import sklearn
-from sklearn.metrics.pairwise import cosine_similarity
 from utils import *
 
 """
@@ -31,13 +30,15 @@ class Evaluator:
             question_embedding = self.model.apply(self.dic[lid][0], sess)
             correct_canonical_embeddings = [self.model.apply(canonical, sess) for canonical in self.dic[lid][1]]
             incorrect_canonical_embeddings = [self.model.apply(canonical, sess) for canonical in self.dic[lid][2]]
-            correct_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in correct_canonical_embeddings]
-            incorrect_cosine_similarities = [cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in incorrect_canonical_embeddings]
+            correct_cosine_similarities = [my_cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in correct_canonical_embeddings]
+            incorrect_cosine_similarities = [my_cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in incorrect_canonical_embeddings]
             all_cosine_similarities = correct_cosine_similarities + incorrect_cosine_similarities
-            labels = ([1] * len(correct_cosine_similarities)) + ([0] * len(incorrect_cosine_similarities))
+            all_cosine_similarities = np.array(all_cosine_similarities)
+            labels = np.array(([1] * len(correct_cosine_similarities)) + ([0] * len(incorrect_cosine_similarities)))
+            all_cosine_similarities = np.squeeze(all_cosine_similarities)
             self.basic_normalized_eval_list.append(self.basic_normalized_eval(all_cosine_similarities, labels))
             self.softmax_eval_list.append(self.softmax_eval(all_cosine_similarities, labels))
-            self.elimantation_eval_list.append(self.elimantation_eval(all_cosine_similarities, labels, 5))
+            self.elimination_eval_list.append(self.elimination_eval(all_cosine_similarities, labels, 5))
         return (np.mean(self.basic_normalized_eval_list), np.mean(self.softmax_eval_list), np.mean(self.elimination_eval_list))
     
     

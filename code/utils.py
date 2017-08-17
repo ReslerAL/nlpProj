@@ -12,6 +12,7 @@ from numpy import average
 from builtins import str
 import math
 import pickle
+from sklearn.metrics.pairwise import cosine_similarity
 from rnn_model import *
 
 
@@ -181,6 +182,9 @@ def getModelFromFile(model_dir, sess):
     model = Rnn_model(raw_data, config)
     model.load(model_dir, sess)
     return model
+
+def my_cosine_similarity(x, y):
+    return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
  
 if __name__ == '__main__':

@@ -186,30 +186,4 @@ def getModelFromFile(model_dir, sess):
 def my_cosine_similarity(x, y):
     return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
- 
-if __name__ == '__main__':
-    print("in utils main") 
-    vec = [1,2,3]
-    res = basic_normalize(vec)
-    print(res)
-      
-    
-  
-    
-#     raw_data = fileToDic('../project_train_data.csv')
-#     print(len(raw_data))
-#     print(raw_data[32])
-#     vocab = rawDataToVocabulary(raw_data)
-#     print(len(vocab))
-#     print(vocab['chart'], vocab['name'], vocab['dog'])
-
-    
-    
-    
-    
-    
-    
-    
-        
-
 

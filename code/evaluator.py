@@ -8,9 +8,12 @@ import sklearn
 from utils import *
 
 """
-TODO:
-see how to new constant embeddings for new words (words that exist only in the eval_vocab)
-implement the apply method in rnn_model
+Evaluate for the lstm model. In the evaluation data we have question with few examples of correct and incorrect logical forms.
+We want to measure how much the model know to distinguish between the two. One way to so is to transfer the model as scoring 
+function and then to normal the scoring to a distribution and then check how much distribution mass the model put on the correct forms.
+This is done twice, first with regular normalization the second using softmax to normalize.
+Another evaluation method isusing the model to eliminate x forms suspected to be incorrect and then check how much of the eliminated are
+correct eliminations (i.e incorrect forms)
 """
 class Evaluator:
     
@@ -18,8 +21,6 @@ class Evaluator:
         self.model = model
         self.raw_data = self.parseFile(fileName)
         self.dic = processData(self.raw_data, model.vocab)
-#         self.eval_vocab = extendVocab(model.vocab.copy(), self.dic)
-#         self.data = processData(self.raw_data, self.eval_vocab)
         
      
     def eval(self, sess): 
@@ -39,7 +40,11 @@ class Evaluator:
             self.basic_normalized_eval_list.append(self.basic_normalized_eval(all_cosine_similarities, labels))
             self.softmax_eval_list.append(self.softmax_eval(all_cosine_similarities, labels))
             self.elimination_eval_list.append(self.elimination_eval(all_cosine_similarities, labels, 5))
-        return (np.mean(self.basic_normalized_eval_list), np.mean(self.softmax_eval_list), np.mean(self.elimination_eval_list))
+        res = {}
+        res['basic normalized evaluation'] = np.mean(self.basic_normalized_eval_list)
+        res['softmax normalized evaluation'] = np.mean(self.softmax_eval_list)
+        res['elimination evaluation'] = np.mean(self.elimination_eval_list)
+        return res
     
     
     def parseFile(self, fileName):
@@ -95,6 +100,4 @@ class Evaluator:
         guessed_right = np.sum(inversed_labels[eliminated])
         return float(guessed_right) / float(size)
 
-if __name__ == '__main__':
-    print("in evaluator main")
         

@@ -177,31 +177,6 @@ class Rnn_model:
             if result[k] == -1:
                 result[k] = len(sample)
         return result
-    
-    
-if __name__ == '__main__':
-    embeddings = tf.Variable(tf.random_uniform([5, 2], -1.0, 1.0))
-#     x = tf.placeholder(tf.int32, [None, None])
-#     z = tf.nn.embedding_lookup(embeddings, x)
-    
-    x = tf.placeholder(tf.float32, [None])
-    x_nl = tf.nn.l2_normalize(x, dim=0)
-    
-    init = tf.global_variables_initializer()
-    
-    with tf.Session() as sess:
-        sess.run(init)
-#         res, embds = sess.run([z, embeddings], feed_dict={x : [[2],[3]]})
-        res= sess.run(x_nl, feed_dict={x : [1,1,1]})
-#         print(embds)
-        print(res)
-    
-    
-    
-    
-    
-    
-    
-    
+
     
 

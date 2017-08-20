@@ -15,7 +15,7 @@ from rnn_model import *
 """
 evaluate a model given by the argv[1] on data given by argv[2]
 running command example:
-python3 evaluate.py 1502891900064 ../evaluation_data.tsv
+python3 evaluate.py 1503215042564 ../evaluation_data.tsv
 """
 
 eval_data_file = '../filename'
@@ -40,27 +40,5 @@ model = getModelFromFile(model_dir, sess)
 model.prepEval()
 evaluator = Evaluator(model, data_file)
 res = evaluator.eval(sess)
-print(res)
+print(str(res))
 
-# 
-# input = [45, 343, 54, 24, 786, 2345, 234]
-# res = model.apply(input, sess)
-# print(res)
-
-
-# evautor = Evaluator(model, eval_data_file)
-# result = evautor.eval(sess)
-
-
-
-
-
-
-
-
-
-
-
-
-
-  

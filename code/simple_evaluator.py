@@ -45,6 +45,10 @@ class Evaluator:
                 assert len(line) == 5
                 lid, question, canonical, logical, isCorrect = line
                 lid = int(lid)
+                for sym in "-+.^:,?!'":
+                    question = question.replace(sym, "")
+                for sym in "-+^:,?!'":
+                    canonical = canonical.replace(sym, "")
                 #Convert isCorrect to boolean
                 assert isCorrect in ("True\n", "False\n"), "isCorrect: <" + str(isCorrect) + ">"
                 isCorrect = isCorrect == "True\n"

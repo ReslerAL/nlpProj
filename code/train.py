@@ -21,6 +21,8 @@ config = {
     'learning_rate' : 0.001,
     'num_epocs' : 1,
     'data_size'  : 369488,
+    'lambda_c' :0.01,
+    'lambda_w' : 0.01,
     'print_freq' : 10
     }
 

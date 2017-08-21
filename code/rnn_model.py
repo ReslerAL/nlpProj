@@ -38,7 +38,8 @@ class Rnn_model:
         self.zero_batch = tf.zeros(self.batch_size, tf.float32)
         
         #the embedding part. We will learn it as part of the model
-        self.w = tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_dim], -1.0, 1.0))
+        self.w = tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_dim], -1.0, 1.0), name='W')
+        self.w_init = tf.Variable(self.w.initialized_value(), name='W_init')
         
         self.extended_w = tf.concat((self.w, tf.zeros((1, self.embedding_dim))), axis=0)
         
@@ -84,9 +85,22 @@ class Rnn_model:
         self.x_z_incon_sim = self.cosineSim(self.x_last_state.h, self.z_incon_last_state.h)
                 
         self.loss_vec = tf.maximum(self.zero_batch, self.delta - self.x_z_con_sim + self.x_z_incon_sim)
-        self.loss =  tf.reduce_sum(self.loss_vec)
+        self.loss =  tf.reduce_sum(self.loss_vec) + self.getRegularizationLoss()
         
         self.saver = tf.train.Saver()
+        
+    def getRegularizationLoss(self):
+        vars = tf.trainable_variables()
+        W_init, W, lstm_params = None, None, None
+        for var in vars:
+            if var.name == 'W:0':
+                W = var
+            elif var.name == 'W_init:0':
+                W_init = var
+            elif 'kernel' in var.name:
+                lstm_params = var
+        return self.conf['lambda_c']*2*tf.reduce_sum(tf.nn.l2_loss(lstm_params)) + \
+                self.conf['lambda_w']*2*tf.reduce_sum(tf.nn.l2_loss(W_init-W))
     
     def prepEval(self):
         self.input = tf.placeholder(tf.int32, [None, None])

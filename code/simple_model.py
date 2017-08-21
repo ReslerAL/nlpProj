@@ -13,24 +13,24 @@ class SimpleModel:
         sum_embeddings = 0
         num_embeddings = 0
         for word in sent.split():
-            if not word in words:
+            if not word in self.words:
                 #TODO: we want another way of handling missing words
                 print("Ignoring unknown word: " +  word)
             else:
                 num_embeddings += 1
-            sum_embeddings = sum_embeddings + embeddings[words[word]]
+                sum_embeddings = sum_embeddings + self.embeddings[self.words[word]]
         if num_embeddings == 0:
             return 0
         return sum_embeddings / num_embeddings
 
 
-#Example usage: python3 simple_model.py ../evaluation_data.tsv
+#Example usage: python3 simple_model.py
 if __name__ == '__main__':
-    import evaluator
+    import simple_evaluator
     import sys
-    data_file = sys.argv[1] #e.g. ../evaluation_data.tsv
+    data_file = "../evaluation_data.tsv"
     model = SimpleModel("../paragram-phrase-XXL.txt")
-    evaluator = evaluator.Evaluator(model, data_file)
+    evaluator = simple_evaluator.Evaluator(model, data_file)
     sess = None
-    res = evaluator.eval(sess)
+    res = evaluator.eval()
     print(res)

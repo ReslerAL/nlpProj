@@ -52,6 +52,10 @@ if __name__ == '__main__':
     data_file = "../evaluation_data.tsv"
     model = SimpleModel("../paragram-phrase-XXL.txt")
     evaluator = simple_evaluator.Evaluator(model, data_file)
-    sess = None
-    res = evaluator.eval()
-    print(res)
+    if False:
+        for p in (0.1, 0.2, 0.5, 0.7, 0.9):
+            evaluator.eval2(p, False)
+            print()
+    else:
+        evaluator.eval2(0.2, True)
+

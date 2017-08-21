@@ -9,7 +9,7 @@ class SimpleModel:
         self.words = {_[1]:_[0] for _ in enumerate(data[:,0])}
         self.embeddings = data[:,1:].copy().astype("float64")
 
-    def apply(self, sent, sess=None):
+    def apply_ignore_unkown_words(self, sent, sess=None):
         sum_embeddings = 0
         num_embeddings = 0
         for word in sent.split():
@@ -22,6 +22,27 @@ class SimpleModel:
         if num_embeddings == 0:
             return 0
         return sum_embeddings / num_embeddings
+
+    def apply_generate_new_embeddings_for_unkown_words(self, sent, sess=None):
+        sum_embeddings = 0
+        num_embeddings = 0
+        max_index = max(self.words.values())
+        for word in sent.split():
+            num_embeddings += 1
+            if not word in self.words:
+                max_index += 1
+                new_index = max_index
+                new_embedding = np.random.normal(0, 0.4, 300)
+                self.words[word] = new_index
+                self.embeddings = np.vstack((self.embeddings, new_embedding))
+                assert(np.all(self.embeddings[self.words[word]] == new_embedding))
+            sum_embeddings = sum_embeddings + self.embeddings[self.words[word]]
+        if num_embeddings == 0:
+            return 0
+        return sum_embeddings / num_embeddings
+
+    def apply(self, sent, sess=None):
+        return self.apply_generate_new_embeddings_for_unkown_words(sent, sess)
 
 
 #Example usage: python3 simple_model.py

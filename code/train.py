@@ -14,15 +14,15 @@ import time
 import sys
 
 config = {
-    'batch_size' : 25,
+    'batch_size' : 100,
     'embedding_dim' : 300,
     'data_file' : '../project_train_data.csv',
-    'delta' : 0.3,
-    'learning_rate' : 0.001,
+    'delta' : 0.4,
+    'learning_rate' : 0.0005,
     'num_epocs' : 10,
     'data_size'  : 369488,
-    'lambda_c' :0.01,
-    'lambda_w' : 0.01,
+    'lambda_c' :0.001,
+    'lambda_w' : 1e-06,
     'print_freq' : 10
     }
 

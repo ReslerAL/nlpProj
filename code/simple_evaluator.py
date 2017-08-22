@@ -131,10 +131,10 @@ class Evaluator:
             #P is how many to keep
             P = int(p * n)
             
-#            if P < 1:
-#                count_questions_that_were_discarded += 1
-#                #Next question
-#                continue
+            if (i < 1) or (c < 1):
+                count_questions_that_were_discarded += 1
+                #Next question
+                continue
 
             ranked = np.argsort(all_cosine_similarities)
             keep_zone = True
@@ -187,5 +187,5 @@ class Evaluator:
         print("Mean S ratio:", np.mean(S_ratio_list))
         print("Mean F ratio:", np.mean(F_ratio_list))
         print("count_questions_that_lost_correct_canonical_forms:", count_questions_that_lost_correct_canonical_forms)
-        #print("count_questions_that_were_discarded:", count_questions_that_were_discarded)
+        print("count_questions_that_were_discarded:", count_questions_that_were_discarded)
         print("count_total_number_of_questions:", count_total_number_of_questions)

@@ -9,7 +9,7 @@ class SimpleModel:
         self.words = {_[1]:_[0] for _ in enumerate(data[:,0])}
         self.embeddings = data[:,1:].copy().astype("float64")
 
-    def apply_ignore_unkown_words(self, sent, sess=None):
+    def apply_ignore_unknown_words(self, sent, sess=None):
         sum_embeddings = 0
         num_embeddings = 0
         for word in sent.split():
@@ -23,7 +23,7 @@ class SimpleModel:
             return 0
         return sum_embeddings / num_embeddings
 
-    def apply_generate_new_embeddings_for_unkown_words(self, sent, sess=None):
+    def apply_generate_new_embeddings_for_unknown_words(self, sent, sess=None):
         sum_embeddings = 0
         num_embeddings = 0
         max_index = max(self.words.values())
@@ -42,7 +42,7 @@ class SimpleModel:
         return sum_embeddings / num_embeddings
 
     def apply(self, sent, sess=None):
-        return self.apply_generate_new_embeddings_for_unkown_words(sent, sess)
+        return self.apply_generate_new_embeddings_for_unknown_words(sent, sess)
 
 
 #Example usage: python3 simple_model.py
@@ -53,9 +53,9 @@ if __name__ == '__main__':
     model = SimpleModel("../paragram-phrase-XXL.txt")
     evaluator = simple_evaluator.Evaluator(model, data_file)
     if False:
-        for p in (0.1, 0.2, 0.5, 0.7, 0.9):
+        for p in (0.0, 0.1, 0.2, 0.5, 0.7, 0.9, 1.0):
             evaluator.eval2(p, False)
             print()
     else:
-        evaluator.eval2(0.2, True)
+        evaluator.eval2(0.2, False)
 

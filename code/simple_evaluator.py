@@ -117,7 +117,10 @@ class Evaluator:
             all_cosine_similarities = correct_cosine_similarities + incorrect_cosine_similarities
             all_cosine_similarities = np.array(all_cosine_similarities)
             labels = np.array(([1] * len(correct_cosine_similarities)) + ([0] * len(incorrect_cosine_similarities)))
-            all_cosine_similarities = np.array(np.squeeze(all_cosine_similarities))
+            all_cosine_similarities = np.squeeze(all_cosine_similarities)
+            if all_cosine_similarities.shape == ():
+                all_cosine_similarities = (all_cosine_similarities.tolist(),)
+
             canonical_forms = self.dic[lid][1] + self.dic[lid][2]
             logical_forms = self.dic[lid][3] + self.dic[lid][4]
 
@@ -127,10 +130,11 @@ class Evaluator:
             n = c + i
             #P is how many to keep
             P = int(p * n)
-            if P < 1:
-                count_questions_that_were_discarded += 1
-                #Next question
-                continue
+            
+#            if P < 1:
+#                count_questions_that_were_discarded += 1
+#                #Next question
+#                continue
 
             ranked = np.argsort(all_cosine_similarities)
             discard_zone = True

@@ -137,7 +137,7 @@ class Evaluator:
 #                continue
 
             ranked = np.argsort(all_cosine_similarities)
-            discard_zone = True
+            keep_zone = True
             if verbose:
                 print("###################################################")
                 print(str(lid) + ".", self.dic[lid][0])
@@ -151,18 +151,18 @@ class Evaluator:
                 logical = logical_forms[current_canonical_index]
                 label = labels[current_canonical_index]
                 similarity = all_cosine_similarities[current_canonical_index]
-                if (j >= n - P) and discard_zone:
-                    discard_zone = False
+                if (j >= P) and keep_zone:
+                    keep_zone = False
                     if verbose:
                         print("---------------------------------------------------")
-                if discard_zone and label == 1:
+                if (not keep_zone) and label == 1:
                     F_plus += 1
-                if (not discard_zone) and label == 0:
+                if keep_zone and label == 0:
                     S_minus += 1
-                if discard_zone:
-                    F += 1
-                else:
+                if keep_zone:
                     S += 1
+                else:
+                    F += 1
                 if verbose:
                     print ("\t", str(j), "logical:", logical, "canonical:", canonical, "correct:", label, "similarity:", similarity)
 
@@ -187,5 +187,5 @@ class Evaluator:
         print("Mean S ratio:", np.mean(S_ratio_list))
         print("Mean F ratio:", np.mean(F_ratio_list))
         print("count_questions_that_lost_correct_canonical_forms:", count_questions_that_lost_correct_canonical_forms)
-        print("count_questions_that_were_discarded:", count_questions_that_were_discarded)
+        #print("count_questions_that_were_discarded:", count_questions_that_were_discarded)
         print("count_total_number_of_questions:", count_total_number_of_questions)

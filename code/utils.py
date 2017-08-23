@@ -184,6 +184,7 @@ def getModelFromFile(model_dir, sess):
     return model
 
 def my_cosine_similarity(x, y):
+    print("" + x.reshape(1, -1))
     return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
 

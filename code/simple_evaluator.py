@@ -1,12 +1,20 @@
 '''
 Created on Aug 6, 2017
-
+code.
 @author: alon
 '''
 
 import numpy as np
-import utils
-from utils import *
+import math
+
+from sklearn.metrics.pairwise import cosine_similarity
+
+#utils functions
+def remove_apostrophe(str):
+    return str.replace("'", "")
+
+def my_cosine_similarity(x, y):
+    return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
 class Evaluator:
     
@@ -17,33 +25,17 @@ class Evaluator:
         self.softmax_eval_list = []
         self.elimination_eval_list = []
 
-    def eval(self):
-        for lid in self.dic.keys():
-            question_embedding = self.model.apply(self.dic[lid][0])
-            correct_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[lid][1]]
-            incorrect_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[lid][2]]
-            correct_cosine_similarities = [my_cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in correct_canonical_embeddings]
-            incorrect_cosine_similarities = [my_cosine_similarity(question_embedding, canonical_embedding) for canonical_embedding in incorrect_canonical_embeddings]
-            all_cosine_similarities = correct_cosine_similarities + incorrect_cosine_similarities
-            all_cosine_similarities = np.array(all_cosine_similarities)
-        
-            labels = np.array(([1] * len(correct_cosine_similarities)) + ([0] * len(incorrect_cosine_similarities)))
-            all_cosine_similarities = np.squeeze(all_cosine_similarities)
-
-            self.basic_normalized_eval_list.append(self.basic_normalized_eval(all_cosine_similarities, labels))
-            self.softmax_eval_list.append(self.softmax_eval(all_cosine_similarities, labels))
-            self.elimination_eval_list.append(self.elimination_eval(all_cosine_similarities, labels, 5))
-        return (np.mean(self.basic_normalized_eval_list), np.mean(self.softmax_eval_list), np.mean(self.elimination_eval_list))
-        
     def parseFile(self, fileName):
         dic = {}
         with open(fileName) as f:
             for line in f:
                 #Parse line
-                line = utils.removeApostrophe(line)
+                line = remove_apostrophe(line)
                 line = line.split('\t')
                 assert len(line) == 5
                 lid, question, canonical, logical, isCorrect = line
+                if lid == "":
+                    break
                 lid = int(lid)
                 for sym in "-+.^:,?!'":
                     question = question.replace(sym, "")
@@ -65,39 +57,77 @@ class Evaluator:
                     dic[lid][4] = list(set(dic[lid][4] + [logical]))
         return dic
     
-    def basic_normalized_eval(self, similarityVector, labels):
-        '''
-        return the distribution mass on the correct samples when using regular normalization 
-        '''
-        similarityVector = basic_normalize(similarityVector)
-        return correct_distribution_mass(similarityVector, labels)
-        
-    
-    def softmax_eval(self, similarityVector, labels):
-        '''
-        return the distribution mass on the correct samples when using softmax to normalized 
-        '''
-        similarityVector = softmax_normalize(similarityVector)
-        return correct_distribution_mass(similarityVector, labels)
-    
-    def elimination_eval(self, similarityVector, labels, size):
-        '''
-        eliminate the minimum size of the pred_dist and return #of correct eliminated / size - 
-        this is the fraction of incorrect vectors that were eliminated  
-        '''
 
-        eliminated = np.argsort(similarityVector)[:size]
-        inversed_labels = 1 - labels
-        guessed_right = np.sum(inversed_labels[eliminated])
-        
-        return float(guessed_right) / float(size)
-        
+    def process_similarities(self, qid):
+        question_embedding = self.model.apply(self.dic[qid][0])
+        correct_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[qid][1]]
+        spurious_canonical_embeddings = [self.model.apply(canonical) for canonical in self.dic[qid][2]]
+        correct_cosine_similarities = [my_cosine_similarity(question_embedding, canonical_embedding) for
+                                       canonical_embedding in correct_canonical_embeddings]
+        spurious_cosine_similarities = [my_cosine_similarity(question_embedding, canonical_embedding) for
+                                         canonical_embedding in spurious_canonical_embeddings]
 
-    #p is proportion to keep
-    #Skipping when proportion is less the one
-    #actual number of items to keep is rounded down
-    #
-    #verbose means print analysis per question
+        sims = correct_cosine_similarities + spurious_cosine_similarities
+        sims = np.array(sims)
+        labels = np.array(([1] * len(correct_cosine_similarities)) + ([0] * len(spurious_cosine_similarities)))
+        sims = np.squeeze(sims)
+        if sims.shape == ():
+            sims = (sims.tolist(),)
+        return sims, labels
+
+    def sims_to_rewards(self, qid, sims, p=0.2, verbose=True):
+        rewards = [1]*len(sims)
+        ranked = np.argsort(sims)
+        threshold = int(p * len(sims))
+        eliminated = ranked[:threshold]
+        for i in eliminated:
+            rewards[i] = 0
+
+        if (verbose):
+            j = 0
+            logical_forms = self.dic[qid][3] + self.dic[qid][4]
+            canons = self.dic[qid][1] + self.dic[qid][2]
+            question = self.dic[qid][1] + self.dic[qid][2]
+            for i in reversed(ranked):
+
+                if len(ranked) - j == threshold:
+                    print("---------------------------------------------------")
+
+                print("\t", str(j), "logical:", logical, "canonical:", canonical, "correct:", label, "similarity:",
+                      sims[i])
+                j = j + 1
+
+        return rewards
+
+    def score_results(self, rewards, lables):
+        kept = [index for index, value in enumerate(rewards) if value == 1]
+        eliminated = [index for index, value in enumerate(rewards) if value == 0]
+        assert len(kept) > 0
+        kept_noise = 1 - (np.sum(lables[kept]) / len(kept))
+        if (len(eliminated) > 0):
+            eliminated_noise = np.sum(lables[eliminated]) / len(eliminated)
+        else:
+            eliminated_noise = 0
+        return kept_noise, eliminated_noise
+
+    def eval(self, p=.2, verbose=True):
+        kept_noise_list = []
+        eliminated_noise_list = []
+        for qid in self.dic.keys():
+            sims, lables = self.process_similarities(qid)
+            rewards = self.sims_to_rewards(sims, p)
+            kept_noise, eliminated_noise = self.score_results(rewards, lables)
+            kept_noise_list.append(kept_noise)
+            eliminated_noise_list.append(eliminated_noise)
+
+        print("number of questions:", len(self.dic.keys()))
+        print("p: elimination proportion used:", p)
+        print("Mean kept noise:", np.mean(kept_noise_list))
+        print("Max kept noise:", np.max(kept_noise_list))
+        print("Min kept noise:", np.min(kept_noise_list))
+        print("Mean eliminated noise:", np.mean(eliminated_noise_list))
+
+
     def eval2(self, p=.2, verbose=True):
         #F_ratio is F+/F, i.e. ratio of correct items in the eliminated items
         F_ratio_list = []
@@ -129,7 +159,7 @@ class Evaluator:
             i = len(incorrect_canonical_embeddings)
             n = c + i
             #P is how many to keep
-            P = int(p * n)
+            P = math.ceil(p * n)
             
             if (i < 1) or (c < 1):
                 count_questions_that_were_discarded += 1

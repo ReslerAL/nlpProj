@@ -52,7 +52,7 @@ class Rnn_model:
         self.z_incon = tf.placeholder(tf.int32, [None, None], name='z_incon')
         
         #transfer the input to lost embedding vectors we can feed the net with
-        x_embeds = tf.nn.embedding_lookup(self.extended_w, self.x)
+        self.x_embeds = tf.nn.embedding_lookup(self.extended_w, self.x)
         z_con_embeds = tf.nn.embedding_lookup(self.extended_w, self.z_con)
         z_incon_embeds = tf.nn.embedding_lookup(self.extended_w, self.z_incon)
         
@@ -69,7 +69,7 @@ class Rnn_model:
         # last_state.c - this is the last cell state according to the sequence length parameter (this is c_t)
         
         _, self.x_last_state = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, 
-                                                 sequence_length=self.x_seq_len, inputs=x_embeds)
+                                                 sequence_length=self.x_seq_len, inputs=self.x_embeds)
         
         _, self.z_con_last_state = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, 
                                                 sequence_length=self.z_con_seq_len, inputs=z_con_embeds)

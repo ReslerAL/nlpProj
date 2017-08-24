@@ -16,41 +16,25 @@ from sklearn.metrics.pairwise import cosine_similarity
 from rnn_model import *
 
 
-def removeApostrophe(str):
-    return str.replace("'", "")
-
-
 def fileToDic(fileName):
     """
     take input file where each line is <key><separtor><value>
     and return a dictionary of <question_id :[question, [consistent canonical forms],[inconsistent canonical forms] ]> 
     """
     dic = {}
-    max_sent_size = 0
-    max_sent = ''
-#     ttl_len = 0
-    count = 0
     with open(fileName) as f:
         for line in f:
-            #Parse line
-            line = removeApostrophe(line)
             line = line.split('\t')
             assert len(line) == 5
             lid, question, canonical, logicalForm, isConsistent = line
-#             ttl_len += len(question.split())
-#             ttl_len += len(canonical.split())
-            count += 1
-#             if len(question.split()) > max_sent_size:
-#                 max_sent_size = len(question.split())
-#                 max_sent = question
-#             if len(canonical.split()) > max_sent_size:
-#                 max_sent_size =len(canonical.split())
-#                 max_sent = canonical
+            for sym in "-+.^:,?!'()\"":
+                    question = question.replace(sym, "")
+            for sym in "-+^:,?!'()\"":
+                canonical = canonical.replace(sym, "")
             lid = int(lid)
             #Convert isConsistent to boolean
             assert isConsistent in ("True\n", "False\n"), "isConsistent: <" + str(isConsistent) + ">"
             isConsistent = isConsistent == "True\n"
-
             #Add line to dictionary
             if lid not in dic:
                 dic[lid] = [question, [], []]
@@ -59,10 +43,6 @@ def fileToDic(fileName):
                 dic[lid][1] = list(set(dic[lid][1] + [canonical]))
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
-#     print("max lenght is " + str(max_sent_size))
-#     print("max sent is \n" + max_sent)
-#     print("average len is " + str(ttl_len/count))
-#     print("count is " + str(count))
     return cleanDate(dic)
 
 """for some reason there are sentences without inconsistent forms - remove them"""

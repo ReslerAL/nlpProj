@@ -46,13 +46,10 @@ class Rnn_model:
         #the main lstm cell. The second true argument sets peephole like the model used by Weiting at el.
         self.lstm_cell = tf.contrib.rnn.LSTMCell(self.embedding_dim, True)
         
-        #init C_0 - the state of the lstm_cell at the beginning
-        self._initial_state = self.lstm_cell.zero_state(self.batch_size, dtype=tf.float32)
-        
         #train input placeholder - each input is a list of embedding indices represent the sentence 
-        self.x = tf.placeholder(tf.int32, [self.batch_size, None])
-        self.z_con = tf.placeholder(tf.int32, [self.batch_size, None])
-        self.z_incon = tf.placeholder(tf.int32, [self.batch_size, None])
+        self.x = tf.placeholder(tf.int32, [None, None], name='x')
+        self.z_con = tf.placeholder(tf.int32, [None, None], name='z_con')
+        self.z_incon = tf.placeholder(tf.int32, [None, None], name='z_incon')
         
         #transfer the input to lost embedding vectors we can feed the net with
         x_embeds = tf.nn.embedding_lookup(self.extended_w, self.x)
@@ -61,9 +58,9 @@ class Rnn_model:
         
         #now we need placeholder for the sequence sizes - this is because the data is padded with dummy value
         #and we want the output to be correct (takes on the real end of the sequence, not containing the dummy value)
-        self.x_seq_len = tf.placeholder(dtype=tf.int32, shape=(self.batch_size))
-        self.z_con_seq_len = tf.placeholder(dtype=tf.int32, shape=(self.batch_size))
-        self.z_incon_seq_len = tf.placeholder(dtype=tf.int32, shape=(self.batch_size))
+        self.x_seq_len = tf.placeholder(dtype=tf.int32, shape=(None), name='x_seq_len')
+        self.z_con_seq_len = tf.placeholder(dtype=tf.int32, shape=(None))
+        self.z_incon_seq_len = tf.placeholder(dtype=tf.int32, shape=(None))
                
         #now run the lstm to get the outputs. Note that output shape is batch_size * sequence_len * embedding_dim
         #sequence len is the max len of a sentence in the batch
@@ -86,6 +83,10 @@ class Rnn_model:
                 
         self.loss_vec = tf.maximum(self.zero_batch, self.delta - self.x_z_con_sim + self.x_z_incon_sim)
         self.loss =  tf.reduce_sum(self.loss_vec) + self.getRegularizationLoss()
+        
+        #evaluation hack to enable tensorflow's Java api support
+        self.y1 = tf.add(self.x_last_state.h, self.x_last_state.h, name='y')
+        self.y2 = tf.subtract(self.y1, self.x_last_state.h, name='embd') 
         
         self.saver = tf.train.Saver()
         
@@ -129,6 +130,9 @@ class Rnn_model:
         f = open(dirr + 'configuration.txt', 'w')
         f.write(str(self.conf))
         f.close()
+        builder = tf.saved_model.builder.SavedModelBuilder(dirr + '/pbmodel' )
+        builder.add_meta_graph_and_variables(session, [tf.saved_model.tag_constants.SERVING])
+        builder.save()
         print('model saved to {} directory'.format(dirr))
 
         

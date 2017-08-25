@@ -55,7 +55,6 @@ class Evaluator:
                 else:
                     dic[lid][2] = list(set(dic[lid][2] + [canonical]))
                     dic[lid][4] = list(set(dic[lid][4] + [logical]))
-        print("done!")
         return dic
 
     def process_similarities(self, qid):

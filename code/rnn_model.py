@@ -109,8 +109,10 @@ class Rnn_model:
         _, res = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, inputs=embeds)
         self.eval = res.h
     
-    def apply(self, input, sess):
-        res = sess.run(self.eval, feed_dict={self.input:[input]})
+    def apply(self, sent):
+        assert self.sess != None
+        embd_sent = utils.toEmbeddingList(sent.split(), self.vocab)
+        res = self.sess.run(self.eval, feed_dict={self.input:[embd_sent]})
         return res[0]
         
         
@@ -142,6 +144,7 @@ class Rnn_model:
         f = open(model_dir + 'configuration.txt', 'r')
         print('loading model with configuration:\n', f.read())
         f.close()
+        self.sess = session #save the session for evaluation
     
     
     """

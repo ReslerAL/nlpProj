@@ -10,7 +10,6 @@ class SimpleModel:
         #Create a list of embedings and a mapping from word to embeddings index
         self.words = {_[1]:_[0] for _ in enumerate(data[:,0])}
         self.embeddings = data[:,1:].copy().astype("float64")
-        print("done!")
 
     def apply(self, sent, sess=None):
         sum_embeddings = 0

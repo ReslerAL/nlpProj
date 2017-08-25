@@ -12,11 +12,14 @@ from rnn_model import *
 from utils import *
 import time
 import sys
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 config = {
     'batch_size' : 100,
     'embedding_dim' : 300,
-    'data_file' : '../project_train_data.csv',
+    'data_file' : '/home/alon/workspace/nlp/project_train_data.csv',
     'delta' : 0.4,
     'learning_rate' : 0.0005,
     'num_epocs' : 10,

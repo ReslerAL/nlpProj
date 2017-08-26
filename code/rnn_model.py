@@ -121,7 +121,7 @@ class Rnn_model:
     each model will be save in separate directory named with time in milliseconds
     """
     def saveModel(self, session):
-        dirr = '../saved/' + str(int(round(time.time() * 1000))) + '/'
+        dirr = './saved/' + str(int(round(time.time() * 1000))) + '/'
         full_name = dirr + 'lstm-model'
         os.makedirs(dirr,  exist_ok=True)
         self.saver.save(session, full_name)

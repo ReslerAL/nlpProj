@@ -13,13 +13,15 @@ from utils import *
 import time
 import sys
 import os
+import argparse
+
 
 #os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 config = {
     'batch_size' : 100,
     'embedding_dim' : 300,
-    'data_file' : '/home/dormuhlg/workspace/nlpProj/project_train_data.csv',
+    'data_file' : '/home/alon/workspace/nlp/project_train_data.csv',
     'delta' : 0.4,
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
@@ -28,6 +30,35 @@ config = {
     'lambda_w' : 1e-06,
     'print_freq' : 100
     }
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-lr", help="learning rate")
+parser.add_argument("-margin", help="the delta from the loss")
+parser.add_argument("-batch_size", help="batch size to use")
+parser.add_argument("-dim", help="the embeddings dimension ")
+parser.add_argument("-lc", help="regularization of the lstm weights")
+parser.add_argument("-lw", help="regularization of the embedding matrix")
+parser.add_argument("-epocs", help="Number of epocs to run")
+
+args = parser.parse_args()
+
+if args.lr != None:
+    config['learning_rate'] = float(args.lr)
+if args.margin != None:
+    config['delta'] = float(args.margin)
+if args.batch_size != None:
+    config['batch_size'] = int(args.batch_size)
+if args.dim != None:
+    config['embedding_dim'] = int(args.dim)
+if args.lc != None:
+    config['lambda_c'] = float(args.lc)
+if args.lw != None:
+    config['lambda_w'] = float(args.lw)
+if args.epocs != None:
+    config['num_epocs'] = int(args.epocs)
+    
 
 print('run configuration:', config)
 print("getting the data... ")      

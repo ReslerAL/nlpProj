@@ -14,6 +14,7 @@ import time
 import sys
 import os
 import argparse
+import shutil
 
 
 #os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -77,6 +78,8 @@ start = time.time()
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
+f = open('out.txt', 'w')
+
 while count <= batches_to_run:
     batch = model.generateBatch()
     dic = {model.x : batch[0][0], model.x_seq_len : batch[0][1],
@@ -88,14 +91,18 @@ while count <= batches_to_run:
     if count % config['print_freq'] == 0:
         timer = time.time() - start
         print(str.format('{} batches run. {} batches left', count, batches_to_run - count))
-        print(str.format('{} last batches average loss = {}', config['print_freq'], np.average(losses[-config['print_freq']:]) / config['batch_size']))
+        loss = np.average(losses[-10:])
+        print(str.format('{} last batches average loss = {}', 10, loss))
         h,m,s = formatTimer(timer)
         print(str.format('Train time: {}:{}:{}\n', h, m, s))
+        f.write('batches: {}. {} last batches average loss: {}\n'.format(count, 10, loss))
         
     count += 1
 
 print("training finished. Saving the model...")
-model.saveModel(sess)
+model_dir = model.saveModel(sess)
+f.close()
+shutil.move('out.txt', model_dir + 'out.txt')
 print("************      The End       ***************")
 
 

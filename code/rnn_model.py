@@ -82,7 +82,7 @@ class Rnn_model:
         self.x_z_incon_sim = self.cosineSim(self.x_last_state.h, self.z_incon_last_state.h)
                 
         self.loss_vec = tf.maximum(self.zero_batch, self.delta - self.x_z_con_sim + self.x_z_incon_sim)
-        self.loss =  tf.reduce_sum(self.loss_vec) + self.getRegularizationLoss()
+        self.loss =  tf.reduce_mean(self.loss_vec) + self.getRegularizationLoss()
         
         #evaluation hack to enable tensorflow's Java api support
         self.y1 = tf.add(self.x_last_state.h, self.x_last_state.h, name='y')
@@ -136,6 +136,7 @@ class Rnn_model:
         builder.add_meta_graph_and_variables(session, [tf.saved_model.tag_constants.SERVING])
         builder.save()
         print('model saved to {} directory'.format(dirr))
+        return dirr
 
         
     def load(self, model_dir, session):

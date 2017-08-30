@@ -22,11 +22,11 @@ import shutil
 config = {
     'batch_size' : 100,
     'embedding_dim' : 300,
-    'data_file' : '/home/alon/workspace/nlp/project_train_data.csv',
+    'data_file' : './nlml_train_data.tsv',
     'delta' : 0.4,
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
-    'data_size'  : 369488,
+    'data_size'  : 516711,
     'lambda_c' :0.001,
     'lambda_w' : 1e-06,
     'print_freq' : 100

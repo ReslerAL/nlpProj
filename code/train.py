@@ -27,9 +27,9 @@ config = {
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
     'data_size'  : 516711,
-    'lambda_c' :0.001,
-    'lambda_w' : 1e-06,
-    'print_freq' : 100
+    'lambda_c' :0.0001,
+    'lambda_w' : 1e-05,
+    'print_freq' : 50
     }
 
 
@@ -73,21 +73,30 @@ batches_to_run = config['num_epocs']*config['data_size'] // config['batch_size']
 print(str.format('Starting to train. {} batches to go...', batches_to_run))
 count = 1
 losses = []
+l1s = [] 
+l2s = []
+reg1s = []
+reg2s = []
 start = time.time()
 
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
 f = open('out.txt', 'w')
+g = open('loss.txt', 'w')
 
 while count <= batches_to_run:
     batch = model.generateBatch()
     dic = {model.x : batch[0][0], model.x_seq_len : batch[0][1],
                       model.z_con : batch[1][0], model.z_con_seq_len : batch[1][1],
                       model.z_incon : batch[2][0], model.z_incon_seq_len : batch[2][1]}
-    _, loss = sess.run([optimizer, model.loss], feed_dict=dic)
+    _, loss, l1, l2, reg1, reg2 = sess.run([optimizer, model.loss, model.loss1, model.loss2, model.reg1, model.reg2], feed_dict=dic)
     losses.append(loss)
+    l1s.append(l1)
+    l2s.append(l2)
+    reg1s.append(reg1)
     
+#     print('loss {}    l1 {}    l2 {}    c_reg {}    w_reg {}'.format(loss, l1, l2 , reg1, reg2))
     if count % config['print_freq'] == 0:
         timer = time.time() - start
         print(str.format('{} batches run. {} batches left', count, batches_to_run - count))
@@ -96,13 +105,17 @@ while count <= batches_to_run:
         h,m,s = formatTimer(timer)
         print(str.format('Train time: {}:{}:{}\n', h, m, s))
         f.write('batches: {}. {} last batches average loss: {}\n'.format(count, 10, loss))
+        g.write('loss {}    l1 {}    l2 {}    c_reg {}    w_reg {}\n'.format(
+            loss, np.average(l1s[-10:]), np.average(l2s[-10:]) , np.average(reg1s[-10:]), np.average(reg2s[-10:]) ))
         
     count += 1
 
 print("training finished. Saving the model...")
 model_dir = model.saveModel(sess)
 f.close()
+g.close()
 shutil.move('out.txt', model_dir + 'out.txt')
+shutil.move('loss.txt', model_dir + 'loss.txt')
 print("************      The End       ***************")
 
 

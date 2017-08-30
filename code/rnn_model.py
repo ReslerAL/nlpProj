@@ -82,7 +82,9 @@ class Rnn_model:
         self.x_z_incon_sim = self.cosineSim(self.x_last_state.h, self.z_incon_last_state.h)
                 
         self.loss_vec = tf.maximum(self.zero_batch, self.delta - self.x_z_con_sim + self.x_z_incon_sim)
-        self.loss =  tf.reduce_mean(self.loss_vec) + self.getRegularizationLoss()
+        self.loss1 = tf.reduce_mean(self.loss_vec)
+        self.loss2 = self.getRegularizationLoss()
+        self.loss = self.loss1 + self.loss2        
         
         #evaluation hack to enable tensorflow's Java api support
         self.y1 = tf.add(self.x_last_state.h, self.x_last_state.h, name='y')
@@ -100,8 +102,9 @@ class Rnn_model:
                 W_init = var
             elif 'kernel' in var.name:
                 lstm_params = var
-        return self.conf['lambda_c']*2*tf.reduce_sum(tf.nn.l2_loss(lstm_params)) + \
-                self.conf['lambda_w']*2*tf.reduce_sum(tf.nn.l2_loss(W_init-W))
+        self.reg1 = self.conf['lambda_c']*2*tf.reduce_sum(tf.nn.l2_loss(lstm_params))
+        self.reg2 = self.conf['lambda_w']*2*tf.reduce_sum(tf.nn.l2_loss(W_init-W))
+        return self.reg1 + self.reg2
     
     def prepEval(self):
         self.input = tf.placeholder(tf.int32, [None, None])

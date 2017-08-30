@@ -1,4 +1,5 @@
 #!/bin/sh
+export CUDA_VISIBLE_DEVICES=0
 models=$(ls saved/) 
 for model in $models
 do

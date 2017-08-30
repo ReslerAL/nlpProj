@@ -1,5 +1,6 @@
 #!/bin/sh
-# run example "./eval.sh 1503569471412 0.5 false" 
+# run example "./eval.sh 1503569471412 0.5 false"
+export CUDA_VISIBLE_DEVICES=0
 WORD_EMBDS_FILE=paragram-phrase-XXL.txt
 EVAL_DATA_FILE=eval_data_nlmlproj.tsv
 MODEL_DIR=./saved/$1/

@@ -50,11 +50,20 @@ class Evaluator:
                     dic[lid] = [question, [], [], [], []]
                 #Add the logical form to the correct or incorrect unique list
                 if isCorrect:
+                    old_size = len(dic[lid][1])
                     dic[lid][1] = list(set(dic[lid][1] + [canonical]))
-                    dic[lid][3] = list(set(dic[lid][3] + [logical]))
+                    new_size = len(dic[lid][1])
+                    if old_size < new_size:
+                        dic[lid][3] = dic[lid][3] + [logical]
                 else:
+                    old_size = len(dic[lid][2])
                     dic[lid][2] = list(set(dic[lid][2] + [canonical]))
-                    dic[lid][4] = list(set(dic[lid][4] + [logical]))
+                    new_size = len(dic[lid][2])
+                    if old_size < new_size:
+                        dic[lid][4] = dic[lid][4] + [logical]
+
+
+
         return dic
 
     def process_similarities(self, qid):
@@ -75,8 +84,8 @@ class Evaluator:
         return sims, labels
 
     @staticmethod
-    def sims_to_rewards_softmax(sims, p=0.2):
-        elim_rewards = Evaluator.sims_to_rewards_elimination(sims, p)
+    def sims_to_rewards_softmax(sims, p=0.2, t=5):
+        elim_rewards = Evaluator.sims_to_rewards_elimination(sims, p, t)
         elim_sims = np.multiply(elim_rewards, sims)
         elim_sims = [float("-inf") if x == 0 else x for x in elim_sims]
         scaled = np.multiply(elim_sims, [10]*len(elim_sims))
@@ -85,8 +94,10 @@ class Evaluator:
         return rewards
 
     @staticmethod
-    def sims_to_rewards_elimination(sims, p=0.2):
+    def sims_to_rewards_elimination(sims, p=0.2, t=3):
         rewards = [1]*len(sims)
+        if len(sims) < t:
+            return rewards
         ranked = np.argsort(sims)
         threshold = int(p * len(sims))
         eliminated = ranked[:threshold]
@@ -95,11 +106,11 @@ class Evaluator:
         return rewards
 
     @staticmethod
-    def sims_to_rewards(sims, p=0.2, soft=True):
+    def sims_to_rewards(sims, p=0.2, t=0, soft=True):
         if soft:
-            return Evaluator.sims_to_rewards_softmax(sims, p)
+            return Evaluator.sims_to_rewards_softmax(sims, p, t)
         else:
-            return Evaluator.sims_to_rewards_elimination(sims, p)
+            return Evaluator.sims_to_rewards_elimination(sims, p, t)
 
     @staticmethod
     def score_results(rewards, lables):
@@ -119,40 +130,42 @@ class Evaluator:
             eliminated_noise = 0
         return kept_noise, eliminated_noise
 
-    def eval(self, p=.2, soft=False, verbose=True):
+    def eval(self, p=.2, t=0, soft=False, verbose=True):
         kept_noise_list = []
         eliminated_noise_list = []
         correct_elim_cnt = 0
+        err_id = 0
         for qid in self.dic.keys():
             sims, lables = self.process_similarities(qid)
-            rewards = Evaluator.sims_to_rewards(sims, p, soft)
+            rewards = Evaluator.sims_to_rewards(sims, p, t, soft)
             kept_noise, eliminated_noise = Evaluator.score_results(rewards, lables)
             kept_noise_list.append(kept_noise)
             eliminated_noise_list.append(eliminated_noise)
             if kept_noise == 1:
                 correct_elim_cnt = correct_elim_cnt + 1
 
-            #print question stats
-            if (verbose):
-                j = 0
-                ranked = np.argsort(sims)
-                logical_forms = self.dic[qid][3] + self.dic[qid][4]
-                canons = self.dic[qid][1] + self.dic[qid][2]
-                threshold = int(p * len(ranked))
-                print("###################################################")
-                print(str(qid) + ".", self.dic[qid][0])
-                for i in reversed(ranked):
-                    logical = logical_forms[i]
-                    canonical = canons[i]
-                    label = lables[i]
-                    sim = sims[i]
-                    reward = rewards[i]
-                    if len(ranked) - j == threshold:
-                        print("---------------------------------------------------")
-                    print("\t", str(j), "correct:", label, "reward:", reward, "similarity:", sim, "canonical:", canonical,
-                          "logical:", logical)
-                    j = j + 1
-                print("")
+                #print question stats
+                if verbose and eliminated_noise > 0:
+                    j = 0
+                    ranked = np.argsort(sims)
+                    logical_forms = self.dic[qid][3] + self.dic[qid][4]
+                    canons = self.dic[qid][1] + self.dic[qid][2]
+                    threshold = int(p * len(ranked))
+                    print("###################################################")
+                    print(str(err_id) + ". " + str(qid) + ": ", self.dic[qid][0])
+                    err_id = err_id + 1
+                    for i in ranked:
+                        logical = logical_forms[i]
+                        canonical = canons[i]
+                        label = lables[i]
+                        sim = sims[i]
+                        reward = rewards[i]
+                        if j == threshold:
+                            print("---------------------------------------------------")
+                        print("\t", str(j), "correct:", label, "reward:", reward, "similarity:", sim, "canonical:", canonical,
+                              "logical:", logical)
+                        j = j + 1
+                    print("")
 
         # print final results
         print("number of questions: ", len(self.dic.keys()))

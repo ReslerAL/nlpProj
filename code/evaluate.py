@@ -50,9 +50,11 @@ if (args.verbose != None and args.verbose.lower() == 'true'):
 softmax = False
 if (args.softmax != None and args.softmax.lower() == 'true'):
     softmax = True
+elimination = None
 if (args.elimination != None):
     elimination = float(args.elimination)
-    
+
+print('evaluating with configuration: elimination {}    softmax {}'.format(elimination, softmax))    
 evaluator = simple_evaluator.Evaluator(model, args.evaldata)
 if args.elimination != None:
     evaluator.eval(elimination, softmax, verbose)

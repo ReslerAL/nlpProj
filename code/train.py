@@ -28,7 +28,7 @@ config = {
     'num_epocs' : 10,
     'data_size'  : 516711,
     'lambda_c' :0.0001,
-    'lambda_w' : 1e-05,
+    'lambda_w' : 1e-04,
     'print_freq' : 50
     }
 
@@ -95,6 +95,7 @@ while count <= batches_to_run:
     l1s.append(l1)
     l2s.append(l2)
     reg1s.append(reg1)
+    reg2s.append(reg2)
     
 #     print('loss {}    l1 {}    l2 {}    c_reg {}    w_reg {}'.format(loss, l1, l2 , reg1, reg2))
     if count % config['print_freq'] == 0:

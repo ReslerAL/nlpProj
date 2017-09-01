@@ -104,8 +104,6 @@ while count <= batches_to_run:
     reg1s.append(reg1)
     reg2s.append(reg2)
     
-    print('count is {}'.format(count))
-#     print('loss {}    l1 {}    l2 {}    c_reg {}    w_reg {}'.format(loss, l1, l2 , reg1, reg2))
     if count % config['print_freq'] == 0:
         timer = time.time() - start
         print(str.format('{} batches run. {} batches left', count, batches_to_run - count))

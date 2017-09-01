@@ -29,7 +29,8 @@ config = {
     'data_size'  : 516711,
     'lambda_c' :0.0001,
     'lambda_w' : 1e-04,
-    'print_freq' : 50
+    'print_freq' : 50,
+    'p' : 0.99996
     }
 
 
@@ -42,6 +43,8 @@ parser.add_argument("-dim", help="the embeddings dimension ")
 parser.add_argument("-lc", help="regularization of the lstm weights")
 parser.add_argument("-lw", help="regularization of the embedding matrix")
 parser.add_argument("-epocs", help="Number of epocs to run")
+parser.add_argument("-p", help="Explore|exploite probability. p=1 means explore")
+
 
 args = parser.parse_args()
 
@@ -59,6 +62,8 @@ if args.lw != None:
     config['lambda_w'] = float(args.lw)
 if args.epocs != None:
     config['num_epocs'] = int(args.epocs)
+if args.p != None:
+    config['p'] = float(args.p)
     
 
 print('run configuration:', config)
@@ -82,11 +87,13 @@ start = time.time()
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
+model.setSession(sess)
+
 f = open('out.txt', 'w')
 g = open('loss.txt', 'w')
 
 while count <= batches_to_run:
-    batch = model.generateBatch()
+    batch = model.generateBatch(1 - config['p']**count)
     dic = {model.x : batch[0][0], model.x_seq_len : batch[0][1],
                       model.z_con : batch[1][0], model.z_con_seq_len : batch[1][1],
                       model.z_incon : batch[2][0], model.z_incon_seq_len : batch[2][1]}
@@ -97,6 +104,7 @@ while count <= batches_to_run:
     reg1s.append(reg1)
     reg2s.append(reg2)
     
+    print('count is {}'.format(count))
 #     print('loss {}    l1 {}    l2 {}    c_reg {}    w_reg {}'.format(loss, l1, l2 , reg1, reg2))
     if count % config['print_freq'] == 0:
         timer = time.time() - start

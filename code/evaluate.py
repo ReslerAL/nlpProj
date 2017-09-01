@@ -42,7 +42,6 @@ args = parser.parse_args()
 if args.model == 'lstm':
     sess = tf.Session()
     model = getModelFromFile(args.dir, sess)
-    model.prepEval()
 else:  # simple model
     model = SimpleModel(args.embdsfile)
 

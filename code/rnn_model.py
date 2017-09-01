@@ -16,6 +16,7 @@ import time
 import  math
 import os
 import pickle
+from simple_evaluator import Evaluator
 
 
 class Rnn_model:
@@ -88,7 +89,13 @@ class Rnn_model:
         
         #evaluation hack to enable tensorflow's Java api support
         self.y1 = tf.add(self.x_last_state.h, self.x_last_state.h, name='y')
-        self.y2 = tf.subtract(self.y1, self.x_last_state.h, name='embd') 
+        self.y2 = tf.subtract(self.y1, self.x_last_state.h, name='embd')
+        
+        #add subgrapgh that just calculate the embeddings of sinle sentence
+        self.input = tf.placeholder(tf.int32, [None, None])
+        embeds = tf.nn.embedding_lookup(self.extended_w, self.input)
+        _, res = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, inputs=embeds)
+        self.eval = res.h
         
         self.saver = tf.train.Saver()
         
@@ -106,18 +113,14 @@ class Rnn_model:
         self.reg2 = self.conf['lambda_w']*2*tf.reduce_sum(tf.nn.l2_loss(W_init-W))
         return self.reg1 + self.reg2
     
-    def prepEval(self):
-        self.input = tf.placeholder(tf.int32, [None, None])
-        embeds = tf.nn.embedding_lookup(self.extended_w, self.input)
-        _, res = tf.nn.dynamic_rnn(cell=self.lstm_cell, dtype=tf.float32, inputs=embeds)
-        self.eval = res.h
-    
     def apply(self, sent):
         assert self.sess != None
         embd_sent = utils.toEmbeddingList(sent.split(), self.vocab)
+        return self.apply_embd(embd_sent)
+    
+    def apply_embd(self, embd_sent):
         res = self.sess.run(self.eval, feed_dict={self.input:[embd_sent]})
         return res[0]
-        
         
     """
     saving the model and the configuration
@@ -150,6 +153,8 @@ class Rnn_model:
         f.close()
         self.sess = session #save the session for evaluation
     
+    def setSession(self, session):
+        self.sess = session
     
     """
     x and y are batch (array) of vectors (actually tensors). return batch (array) of the cossine similarite
@@ -160,26 +165,32 @@ class Rnn_model:
         y_nl = tf.nn.l2_normalize(y, 1)
         return tf.reduce_sum(tf.multiply(x_nl, y_nl), axis=1)
     
-        
+    
     """
     return 3 batches. One with the questions and the other two with the consistent and inconsistent forms
     return also the sequence lengths before padding for each batch
-    """     
-    def generateBatch(self):
-        def sample_consistent(key):
-            return random.sample(self.data[key][1], 1)[0]
-        def sample_inconsistent(key):
-            return random.sample(self.data[key][2], 1)[0]
-
+    """ 
+    #with probability q get the best one according to the model otherwise sample randomly 
+    def generateBatch(self, q):
+                
         batch_keys = random.sample(self.keys, self.batch_size)
-        #batch = [(self.data[key][0], sample_consistent(key), sample_inconsistent(key)) for key in batch_keys]
+        coins = np.random.binomial(1, q, self.batch_size)
         batch_x = [self.data[key][0] for key in batch_keys]
-        batch_z_con = [sample_consistent(key) for key in batch_keys]
-        batch_z_incon = [sample_inconsistent(key) for key in batch_keys]
+        batch_z_con = [self.getSample(self.data[key][0], self.data[key][1], coins[i]) for i, key in enumerate(batch_keys)]
+        batch_z_incon = [self.getSample(self.data[key][0], self.data[key][2], coins[i]) for i, key in enumerate(batch_keys)]
         return [(self.padBatch(batch_x), self.getSequenceLength(batch_x)),
                 (self.padBatch(batch_z_con), self.getSequenceLength(batch_z_con)),
                 (self.padBatch(batch_z_incon), self.getSequenceLength(batch_z_incon))]
-    
+        
+       
+    def getSample(self, ques, forms, coin):
+        if coin == 0:
+            return random.sample(forms, 1)[0]
+        q_embd = self.apply_embd(ques)
+        forms_embds = [self.apply_embd(form) for form in forms]
+        similarities = [Evaluator.cosine_sim(q_embd, canonical_embedding) for canonical_embedding in forms_embds]
+        idx = np.argmax(similarities)
+        return forms[idx]
     
     """
     pad all the sequence in the batch according to the max sequence length.

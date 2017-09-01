@@ -14,6 +14,7 @@ import math
 import pickle
 from sklearn.metrics.pairwise import cosine_similarity
 from rnn_model import *
+from simple_model import *
 
 
 def fileToDic(fileName):
@@ -43,6 +44,7 @@ def fileToDic(fileName):
                 dic[lid][1] = list(set(dic[lid][1] + [canonical]))
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
+    clean_consistent(dic)
     return cleanDate(dic)
 
 """for some reason there are sentences without inconsistent forms - remove them"""
@@ -102,6 +104,33 @@ def basic_normalize(vec):
 def softmax_normalize(vec):
     e_vec = np.exp(vec - np.max(vec))
     return e_vec / e_vec.sum()
+
+def cosine_sim(x, y):
+    return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
+
+def clean_consistent(dic, p=0.6):
+    model = SimpleModel("paragram-phrase-XXL.txt")
+    print("cleaning dataeset...")
+    i = 0
+    for qid in dic.keys():
+        if (i % 100 == 0):
+            print("cleaned " + str(i) + "/" + str(len(dic.keys())))
+        #process similarities
+        question_embedding = model.apply(dic[qid][0])
+        const_canonical_embeddings = [model.apply(canonical) for canonical in dic[qid][1]]
+        sims = [cosine_sim(question_embedding, canonical_embedding) for canonical_embedding in const_canonical_embeddings]
+        sims = np.array(sims)
+        sims = np.squeeze(sims)
+        if sims.shape == ():
+            sims = (sims.tolist(),)
+        #clear data
+        ranked = np.argsort(sims)
+        threshold = int(p * len(sims))
+        kept_idx = ranked[threshold:]
+        const = np.array(dic[qid][1])
+        dic[qid][1] = list(const[kept_idx])
+        i = i + 1
+
 
 """
 convert the data to the same structure just instead of words in each place

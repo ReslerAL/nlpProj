@@ -68,7 +68,7 @@ if args.p != None:
 
 print('run configuration:', config)
 print("getting the data... ")      
-raw_data = fileToDic(config['data_file'])
+raw_data = fileToDic(config['data_file'], True)
 
 print("building the model...")
 model = Rnn_model(raw_data, config)

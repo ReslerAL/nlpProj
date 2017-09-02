@@ -17,7 +17,7 @@ from rnn_model import *
 from simple_model import *
 
 
-def fileToDic(fileName):
+def fileToDic(fileName, cleanData):
     """
     take input file where each line is <key><separtor><value>
     and return a dictionary of <question_id :[question, [consistent canonical forms],[inconsistent canonical forms] ]> 
@@ -44,7 +44,8 @@ def fileToDic(fileName):
                 dic[lid][1] = list(set(dic[lid][1] + [canonical]))
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
-    clean_consistent(dic)
+    if cleanData:
+        clean_consistent(dic)
     return cleanDate(dic)
 
 """for some reason there are sentences without inconsistent forms - remove them"""
@@ -187,7 +188,7 @@ model directory is a subdirectory in 'saved' name after the saving time
 def getModelFromFile(model_dir, sess):
     confFile = model_dir + 'configuration.p'
     config = pickle.load(open(confFile, 'rb'))
-    raw_data = fileToDic(config['data_file'])
+    raw_data = fileToDic(config['data_file'], False)
     model = Rnn_model(raw_data, config)
     model.load(model_dir, sess)
     return model

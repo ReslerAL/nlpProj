@@ -121,7 +121,11 @@ class Rnn_model:
     def apply_embd(self, embd_sent):
         res = self.sess.run(self.eval, feed_dict={self.input:[embd_sent]})
         return res[0]
-        
+    
+    def apply_batch(self, inputs, inputes_lengths):
+        res = self.sess.run(self.x_last_state.h, feed_dict={self.x: inputs, self.x_seq_len: inputes_lengths})
+        return res
+    
     """
     saving the model and the configuration
     each model will be save in separate directory named with time in milliseconds
@@ -171,7 +175,7 @@ class Rnn_model:
     return also the sequence lengths before padding for each batch
     """ 
     #with probability q get the best one according to the model otherwise sample randomly 
-    def generateBatch(self, q):
+    def generateBatch2(self, q):
                 
         batch_keys = random.sample(self.keys, self.batch_size)
         coins = np.random.binomial(1, q, self.batch_size)
@@ -192,6 +196,45 @@ class Rnn_model:
         idx = np.argmax(similarities)
         return forms[idx]
     
+    
+    def getBestsSamples(self, key):
+        num_con = len(self.data[key][1])
+        alls = [self.data[key][0]] + self.data[key][1] + self.data[key][2]
+        lenghts = self.getSequenceLength(alls)
+        embeddings = self.apply_batch(self.padBatch(alls), lenghts)
+        qestion_embedding = embeddings[0]
+        consistents = embeddings[1:num_con+1]
+        inconsistents = embeddings[num_con+1:]
+        consistent_similarities = [Evaluator.cosine_sim(qestion_embedding, consistent) for consistent in consistents]
+        inconsistent_similarities = [Evaluator.cosine_sim(qestion_embedding, inconsistent) for inconsistent in inconsistents]
+        idx_con= np.argmax(consistent_similarities)
+        idx_incon = np.argmax(inconsistent_similarities)
+        return self.data[key][1][idx_con], self.data[key][2][idx_incon]
+
+    def getRandomSamples(self, key):
+        return random.sample(self.data[key][1], 1)[0], random.sample(self.data[key][2], 1)[0]
+    
+    def generateBatch(self, q):
+                
+        batch_keys = random.sample(self.keys, self.batch_size)
+        coins = np.random.binomial(1, q, self.batch_size)
+        batch_x = [self.data[key][0] for key in batch_keys]
+        
+        z_con_samples   = [0]*self.batch_size
+        z_incon_samples = [0]*self.batch_size
+        
+        for i in range(self.batch_size):
+            if coins[i] == 0:
+                con_sample, incon_sample = self.getRandomSamples(batch_keys[i])
+            else:
+                con_sample, incon_sample = self.getBestsSamples(batch_keys[i])
+            z_con_samples[i] = con_sample
+            z_incon_samples[i] = incon_sample
+        
+        return [(self.padBatch(batch_x), self.getSequenceLength(batch_x)),
+                (self.padBatch(z_con_samples), self.getSequenceLength(z_con_samples)),
+                (self.padBatch(z_incon_samples), self.getSequenceLength(z_incon_samples))]
+    
     """
     pad all the sequence in the batch according to the max sequence length.
     pad it with self.vocab_size so the value is the index of the constant dummy embedding
@@ -204,14 +247,9 @@ class Rnn_model:
         return result
     
     def getSequenceLength(self, batch):
-        result = [-1]*len(batch)
+        result = [0]*len(batch)
         for k, sample in enumerate(batch):
-            for i, val in enumerate(sample):
-                if val == self.vocab_size: #this is the padding value
-                    result[k] = i
-                    break
-            if result[k] == -1:
-                result[k] = len(sample)
+            result[k] = len(sample)
         return result
 
     

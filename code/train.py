@@ -29,7 +29,7 @@ config = {
     'lambda_c' :0.0001,
     'lambda_w' : 1e-04,
     'print_freq' : 50,
-    'p' : 0.99996
+    'p' : 0.99995
     }
 
 
@@ -63,13 +63,19 @@ if args.epocs != None:
     config['num_epocs'] = int(args.epocs)
 if args.p != None:
     config['p'] = float(args.p)
-    
+ 
+st = str(hash(time.time()))
+outFile = 'out_' + st + '.txt'
+lossFile = 'loss' + st + '.txt'
+f = open(outFile , 'w')
+g = open(lossFile, 'w')   
 
 print('run configuration:', config)
 print("getting the data... ")      
 raw_data = fileToDic(config['data_file'], True)
 len_data = getDataLen(raw_data)
 print('data length is {}'.format(len_data))
+f.write('data length is {}\n'.format(len_data))
 
 print("building the model...")
 model = Rnn_model(raw_data, config)
@@ -77,7 +83,10 @@ optimizer = tf.train.AdamOptimizer(learning_rate=config['learning_rate']).minimi
 
 batches_to_run = config['num_epocs']*len_data // config['batch_size']
 print('batches to run {}'.format(batches_to_run))
+f.write('batches to run {}\n'.format(batches_to_run))
+
 print(str.format('Starting to train. {} batches to go...', batches_to_run))
+f.write(str.format('Starting to train. {} batches to go...\n', batches_to_run))
 count = 1
 losses = []
 l1s = [] 
@@ -90,9 +99,6 @@ sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
 model.setSession(sess)
-
-f = open('out.txt', 'w')
-g = open('loss.txt', 'w')
 
 while count <= batches_to_run:
     batch = model.generateBatch(1 - config['p']**count)
@@ -123,8 +129,8 @@ print("training finished. Saving the model...")
 model_dir = model.saveModel(sess)
 f.close()
 g.close()
-shutil.move('out.txt', model_dir + 'out.txt')
-shutil.move('loss.txt', model_dir + 'loss.txt')
+shutil.move(outFile, model_dir + 'out.txt')
+shutil.move(lossFile, model_dir + 'loss.txt')
 print("************      The End       ***************")
 
 

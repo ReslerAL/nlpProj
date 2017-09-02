@@ -17,7 +17,7 @@ from rnn_model import *
 from simple_model import *
 
 
-def fileToDic(fileName, cleanData):
+def fileToDic(fileName, clean):
     """
     take input file where each line is <key><separtor><value>
     and return a dictionary of <question_id :[question, [consistent canonical forms],[inconsistent canonical forms] ]> 
@@ -44,7 +44,7 @@ def fileToDic(fileName, cleanData):
                 dic[lid][1] = list(set(dic[lid][1] + [canonical]))
             else:
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
-    if cleanData:
+    if clean:
         clean_consistent(dic)
     return cleanData(dic)
 

@@ -46,10 +46,17 @@ def fileToDic(fileName, cleanData):
                 dic[lid][2] = list(set(dic[lid][2] + [canonical]))
     if cleanData:
         clean_consistent(dic)
-    return cleanDate(dic)
+    return cleanData(dic)
 
+def getDataLen(data):
+    count = 0
+    for lid in data:
+        count += len(data[lid][1])
+        count += len(data[lid][2])
+    return count
+    
 """for some reason there are sentences without inconsistent forms - remove them"""
-def cleanDate(dic):
+def cleanData(dic):
     rem = []
     for lid in dic:
         if len(dic[lid][1]) == 0 or len(dic[lid][2]) == 0:

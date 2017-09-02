@@ -26,7 +26,6 @@ config = {
     'delta' : 0.4,
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
-    'data_size'  : 516711,
     'lambda_c' :0.0001,
     'lambda_w' : 1e-04,
     'print_freq' : 50,
@@ -69,12 +68,15 @@ if args.p != None:
 print('run configuration:', config)
 print("getting the data... ")      
 raw_data = fileToDic(config['data_file'], True)
+len_data = getDataLen(raw_data)
+print('data length is {}'.format(len_data))
 
 print("building the model...")
 model = Rnn_model(raw_data, config)
 optimizer = tf.train.AdamOptimizer(learning_rate=config['learning_rate']).minimize(model.loss)
 
-batches_to_run = config['num_epocs']*config['data_size'] // config['batch_size']
+batches_to_run = config['num_epocs']*len_data // config['batch_size']
+print('batches to run {}'.format(batches_to_run))
 print(str.format('Starting to train. {} batches to go...', batches_to_run))
 count = 1
 losses = []

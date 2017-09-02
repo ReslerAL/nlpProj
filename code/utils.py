@@ -113,9 +113,10 @@ def clean_consistent(dic, p=0.6):
     model = SimpleModel("paragram-phrase-XXL.txt")
     print("cleaning dataeset...")
     i = 0
+    dic_len = len(dic)
     for qid in dic.keys():
         if (i % 100 == 0):
-            print("cleaned " + str(i) + "/" + str(len(dic.keys())))
+            print("cleaned " + str(i) + "/" + str(dic_len))
         #process similarities
         question_embedding = model.apply(dic[qid][0])
         const_canonical_embeddings = [model.apply(canonical) for canonical in dic[qid][1]]

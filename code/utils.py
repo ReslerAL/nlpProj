@@ -7,7 +7,7 @@ from __future__ import print_function, division
 import numpy as np
 from fileinput import filename
 import random
-import re
+import pickle
 from numpy import average
 from builtins import str
 import math
@@ -205,4 +205,10 @@ def my_cosine_similarity(x, y):
     print("" + x.reshape(1, -1))
     return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
+if __name__ == '__main__':
+    raw_data = fileToDic('./nlml_train_data.tsv', True)
+    pickle.dump( raw_data, open( "raw_data.p", "wb" ) )
+    print("raw data was saved")
+    
 
+    

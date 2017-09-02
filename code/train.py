@@ -15,6 +15,7 @@ import sys
 import os
 import argparse
 import shutil
+import pickle
 
 
 #os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -72,7 +73,7 @@ g = open(lossFile, 'w')
 
 print('run configuration:', config)
 print("getting the data... ")      
-raw_data = fileToDic(config['data_file'], True)
+raw_data = pickle.load( open( "raw_data.p", "rb" ) )#fileToDic(config['data_file'], True)
 len_data = getDataLen(raw_data)
 print('data length is {}'.format(len_data))
 f.write('data length is {}\n'.format(len_data))

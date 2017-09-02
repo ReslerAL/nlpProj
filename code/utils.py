@@ -196,7 +196,7 @@ model directory is a subdirectory in 'saved' name after the saving time
 def getModelFromFile(model_dir, sess):
     confFile = model_dir + 'configuration.p'
     config = pickle.load(open(confFile, 'rb'))
-    raw_data = fileToDic(config['data_file'], True)
+    raw_data = raw_data = pickle.load( open( "raw_data.p", "rb" ) )#fileToDic(config['data_file'], True)
     model = Rnn_model(raw_data, config)
     model.load(model_dir, sess)
     return model
@@ -207,7 +207,7 @@ def my_cosine_similarity(x, y):
 
 if __name__ == '__main__':
     raw_data = fileToDic('./nlml_train_data.tsv', True)
-    pickle.dump( raw_data, open( "raw_data.p", "wb" ) )
+    pickle.dump( raw_data, open( "raw_data2.p", "wb" ) )
     print("raw data was saved")
     
 

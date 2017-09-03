@@ -28,7 +28,7 @@ config = {
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
     'lambda_c' :0.0001,
-    'lambda_w' : 1e-04,
+    'lambda_w' : 0.001,
     'print_freq' : 50,
     'p' : 0.99995
     }

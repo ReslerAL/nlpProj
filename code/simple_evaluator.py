@@ -6,7 +6,6 @@ code.
 
 import numpy as np
 import math
-
 from sklearn.metrics.pairwise import cosine_similarity
 
 class Evaluator:
@@ -50,20 +49,13 @@ class Evaluator:
                     dic[lid] = [question, [], [], [], []]
                 #Add the logical form to the correct or incorrect unique list
                 if isCorrect:
-                    old_size = len(dic[lid][1])
-                    dic[lid][1] = list(set(dic[lid][1] + [canonical]))
-                    new_size = len(dic[lid][1])
-                    if old_size < new_size:
-                        dic[lid][3] = dic[lid][3] + [logical]
+                    if (canonical not in dic[lid][1]):
+                        dic[lid][1].append(canonical)
+                        dic[lid][3].append(logical)
                 else:
-                    old_size = len(dic[lid][2])
-                    dic[lid][2] = list(set(dic[lid][2] + [canonical]))
-                    new_size = len(dic[lid][2])
-                    if old_size < new_size:
-                        dic[lid][4] = dic[lid][4] + [logical]
-
-
-
+                    if (canonical not in dic[lid][2]):
+                        dic[lid][2].append(canonical)
+                        dic[lid][4].append(logical)
         return dic
 
     def process_similarities(self, qid):
@@ -88,7 +80,7 @@ class Evaluator:
         elim_rewards = Evaluator.sims_to_rewards_elimination(sims, p, t)
         elim_sims = np.multiply(elim_rewards, sims)
         elim_sims = [float("-inf") if x == 0 else x for x in elim_sims]
-        scaled = np.multiply(elim_sims, [10]*len(elim_sims))
+        scaled = np.multiply(elim_sims, [100]*len(elim_sims))
         e_vec = np.exp(scaled - np.max(scaled))
         rewards = e_vec / e_vec.sum()
         return rewards
@@ -135,9 +127,11 @@ class Evaluator:
         eliminated_noise_list = []
         correct_elim_cnt = 0
         err_id = 0
+
         for qid in self.dic.keys():
             sims, lables = self.process_similarities(qid)
             rewards = Evaluator.sims_to_rewards(sims, p, t, soft)
+
             kept_noise, eliminated_noise = Evaluator.score_results(rewards, lables)
             kept_noise_list.append(kept_noise)
             eliminated_noise_list.append(eliminated_noise)

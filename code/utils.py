@@ -116,7 +116,7 @@ def softmax_normalize(vec):
 def cosine_sim(x, y):
     return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
-def clean_consistent(dic, p=0.6):
+def clean_consistent(dic, p=0.8):
     model = SimpleModel("paragram-phrase-XXL.txt")
     print("cleaning dataeset...")
     i = 0
@@ -196,7 +196,7 @@ model directory is a subdirectory in 'saved' name after the saving time
 def getModelFromFile(model_dir, sess):
     confFile = model_dir + 'configuration.p'
     config = pickle.load(open(confFile, 'rb'))
-    raw_data = pickle.load( open( "raw_data.p", "rb" ) )#fileToDic(config['data_file'], True)
+    raw_data = pickle.load( open( "raw_data_0.6.p", "rb" ) )#fileToDic(config['data_file'], True)
     model = Rnn_model(raw_data, config)
     model.load(model_dir, sess)
     return model
@@ -206,8 +206,8 @@ def my_cosine_similarity(x, y):
     return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
 if __name__ == '__main__':
-    raw_data = fileToDic('./nlml_train_data.tsv', True)
-    pickle.dump( raw_data, open( "raw_data2.p", "wb" ) )
+    raw_data = fileToDic('./train_data_version2.tsv', True)
+    pickle.dump( raw_data, open( "raw_data2_0.6.p", "wb" ) )
     print("raw data was saved")
     
 

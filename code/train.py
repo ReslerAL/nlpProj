@@ -23,14 +23,14 @@ import pickle
 config = {
     'batch_size' : 100,
     'embedding_dim' : 300,
-    'data_file' : './nlml_train_data.tsv',
-    'delta' : 0.4,
+    'data_file' : './raw_data2_0.6.p',
+    'delta' : 0.0,
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
     'lambda_c' :0.0001,
     'lambda_w' : 0.001,
     'print_freq' : 50,
-    'p' : 0.99995
+    'p' : 0.99992
     }
 
 
@@ -73,7 +73,8 @@ g = open(lossFile, 'w')
 
 print('run configuration:', config)
 print("getting the data... ")      
-raw_data = pickle.load( open( "raw_data.p", "rb" ) )#fileToDic(config['data_file'], True)
+raw_data = pickle.load( open( config['data_file'], "rb" ) )
+#raw_data = fileToDic(config['data_file'], False)
 len_data = getDataLen(raw_data)
 print('data length is {}'.format(len_data))
 f.write('data length is {}\n'.format(len_data))

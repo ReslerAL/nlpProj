@@ -83,7 +83,7 @@ print("building the model...")
 model = Rnn_model(raw_data, config)
 optimizer = tf.train.AdamOptimizer(learning_rate=config['learning_rate']).minimize(model.loss)
 
-batches_to_run = config['num_epocs']*len_data // config['batch_size']
+batches_to_run = 10#config['num_epocs']*len_data // config['batch_size']
 print('batches to run {}'.format(batches_to_run))
 f.write('batches to run {}\n'.format(batches_to_run))
 

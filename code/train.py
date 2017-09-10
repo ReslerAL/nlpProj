@@ -23,14 +23,14 @@ import pickle
 config = {
     'batch_size' : 100,
     'embedding_dim' : 300,
-    'data_file' : './raw_data2_0.6.p',
+    'data_file' : './raw_data.p',
     'delta' : 0.0,
     'learning_rate' : 0.0005,
     'num_epocs' : 10,
     'lambda_c' :0.0001,
     'lambda_w' : 0.001,
     'print_freq' : 50,
-    'p' : 0.99992
+    'p' : 0.99995
     }
 
 

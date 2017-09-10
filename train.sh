@@ -1,2 +1,2 @@
 #!/bin/sh
-CUDA_VISIBLE_DEVICES=1 python3 code/train.py $@
+CUDA_VISIBLE_DEVICES=0 python3 code/train.py $@

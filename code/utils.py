@@ -29,7 +29,7 @@ def fileToDic(fileName, clean):
             assert len(line) == 5
             lid, question, canonical, logicalForm, isConsistent = line
             for sym in "-+.^:,?!'()\"":
-                    question = question.replace(sym, "")
+                question = question.replace(sym, "")
             for sym in "-+^:,?!'()\"":
                 canonical = canonical.replace(sym, "")
             lid = int(lid)
@@ -171,6 +171,16 @@ def toEmbeddingList(word_list, embeddingsToIndx):
         res.append(embeddingsToIndx[word])
     return res
 
+def toEmbeddingList2(word_list, embeddingsToIndx):
+    res = []
+    n = len(embeddingsToIndx)
+    for word in word_list:
+        if word not in embeddingsToIndx:
+            res.append(n)
+        else:
+            res.append(embeddingsToIndx[word])
+    return res
+
 """
 array - array of arrays 
 return the maximun length of array in arrays
@@ -197,7 +207,7 @@ def getModelFromFile(model_dir, sess):
     confFile = model_dir + 'configuration.p'
     config = pickle.load(open(confFile, 'rb'))
     raw_data = pickle.load( open( "raw_data2_0.6.p", "rb" ) )
-    #fileToDic(config['data_file'], True)
+    #raw_data = fileToDic(config['data_file'], False)
     model = Rnn_model(raw_data, config)
     model.load(model_dir, sess)
     return model
@@ -207,8 +217,8 @@ def my_cosine_similarity(x, y):
     return cosine_similarity(x.reshape(1, -1), y.reshape(1, -1))
 
 if __name__ == '__main__':
-    raw_data = fileToDic('./train_data_version2.tsv', True)
-    pickle.dump( raw_data, open( "raw_data2_0.6.p", "wb" ) )
+    raw_data = fileToDic('./train_data_version2.tsv', False)
+    pickle.dump( raw_data, open( "raw_data2_100.p", "wb" ) )
     print("raw data was saved")
     
 

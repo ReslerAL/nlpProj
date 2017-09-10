@@ -115,7 +115,7 @@ class Rnn_model:
     
     def apply(self, sent):
         assert self.sess != None
-        embd_sent = utils.toEmbeddingList(sent.split(), self.vocab)
+        embd_sent = utils.toEmbeddingList2(sent.split(), self.vocab)
         return self.apply_embd(embd_sent)
     
     def apply_embd(self, embd_sent):
